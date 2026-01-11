@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel EBD | Gestão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { primary: '#d4af37', dark: '#121212', panel: '#1e1e1e' } }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .glass-panel { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .status-pago { background-color: #dcfce7; color: #166534; }
+        .status-pendente { background-color: #fee2e2; color: #991b1b; }
+        
+        /* Modal Transitions */
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 px-4">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700">
+            <div class="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-1">ADMIN EBD</h1>
+            <p class="text-sm text-slate-400 mb-6">Acesso Restrito</p>
+            
+            <form onsubmit="handleLogin(event)">
+                <input type="password" id="loginPass" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-primary outline-none mb-4" placeholder="Senha..." required>
+                <button type="submit" id="btnLogin" class="w-full bg-primary hover:bg-yellow-600 text-slate-900 font-bold py-3 rounded-lg transition">ENTRAR</button>
+            </form>
+            <p id="loginError" class="text-red-400 text-xs mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- APP CONTAINER -->
+    <div id="appContainer" class="flex h-full hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <h2 class="font-bold text-xl text-primary"><i class="fa-solid fa-ticket mr-2"></i>EBD 2026</h2>
+                <p class="text-xs text-slate-500">Gestão de Pulseiras</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="filterStatus('all')" class="w-full text-left px-4 py-3 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-700 flex justify-between">
+                    <span>Todos</span> <span id="countAll" class="bg-slate-900 px-2 rounded text-xs py-1">0</span>
+                </button>
+                <button onclick="filterStatus('Pendente')" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between">
+                    <span>Pendentes</span> <span id="countPending" class="bg-red-900/50 text-red-200 px-2 rounded text-xs py-1">0</span>
+                </button>
+                <button onclick="filterStatus('Pago')" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between">
+                    <span>Pagos</span> <span id="countPaid" class="bg-green-900/50 text-green-200 px-2 rounded text-xs py-1">0</span>
+                </button>
+            </nav>
+            <div class="p-4">
+                <button onclick="logout()" class="w-full border border-slate-700 text-slate-400 py-2 rounded hover:bg-slate-800 text-sm">Sair</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 flex flex-col relative">
+            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6">
+                <h2 class="font-bold text-white">Inscrições</h2>
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Buscar nome, CPF..." class="bg-slate-800 border-none text-white text-sm rounded-full px-4 py-2 w-64 focus:ring-1 focus:ring-primary outline-none">
+                    <button onclick="loadData()" class="bg-primary text-slate-900 px-3 py-2 rounded-full hover:bg-yellow-600 transition" title="Atualizar"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-auto p-6">
+                <div class="glass-panel overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-400">
+                        <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-300">
+                            <tr>
+                                <th class="p-4">Data</th>
+                                <th class="p-4">Participante</th>
+                                <th class="p-4 hidden md:table-cell">Congregação</th>
+                                <th class="p-4 text-center">Pulseiras</th>
+                                <th class="p-4">Valor</th>
+                                <th class="p-4 text-center">Status</th>
+                                <th class="p-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-700">
+                            <!-- JS PREENCHE AQUI -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO / UPLOAD -->
+    <div id="actionModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-black/80 backdrop-blur-sm"></div>
+        
+        <div class="modal-container bg-slate-800 w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto border border-slate-700">
+            
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-700">
+                    <p class="text-xl font-bold text-white">Gerenciar Pagamento</p>
+                    <div class="modal-close cursor-pointer z-50 text-slate-400 hover:text-white" onclick="closeModal()">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </div>
+                </div>
+
+                <form id="updateForm" onsubmit="updateOrder(event)" class="my-5">
+                    <input type="hidden" id="modalRowIndex">
+                    
+                    <div class="mb-4">
+                        <p class="text-xs text-slate-500 uppercase font-bold mb-1">Participante</p>
+                        <p id="modalName" class="text-white font-medium text-lg">Nome aqui</p>
+                        <p id="modalCpf" class="text-sm text-slate-400">CPF: 000.000.000-00</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Status do Pagamento</label>
+                        <select id="modalStatus" class="w-full bg-slate-900 border border-slate-600 text-white rounded p-2 focus:border-primary outline-none">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Pago">Pago (Confirmado)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">
+                            <i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Anexar Comprovante
+                        </label>
+                        <div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center hover:border-primary transition relative">
+                            <input type="file" id="modalFile" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFile()">
+                            <div id="fileLabel">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-2"></i>
+                                <p class="text-xs text-slate-400">Clique para selecionar imagem/PDF</p>
+                            </div>
+                            <p id="fileName" class="text-xs text-primary font-bold mt-2 hidden"></p>
+                        </div>
+                        <div id="currentProofLink" class="mt-2 text-xs text-right"></div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-transparent p-3 rounded-lg text-slate-400 hover:bg-slate-700 hover:text-white mr-2 text-sm">Cancelar</button>
+                        <button type="submit" id="btnSave" class="px-6 py-2 bg-primary text-slate-900 font-bold rounded-lg hover:bg-yellow-500 shadow-lg text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-check"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================================
+        // IMPORTANTE: COLOQUE AQUI A URL DO SEU WEB APP GOOGLE (DEPLOY)
+        // =============================================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbwYOUR_SCRIPT_ID_HERE/exec"; 
+        // =============================================================
+
+        let dbData = [];
+
+        // Verifica se já está logado
+        window.onload = function() {
+            if(sessionStorage.getItem('ebdAdminToken')) {
+                showApp();
+            }
+        };
+
+        // --- LOGIN ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('loginPass').value;
+            const btn = document.getElementById('btnLogin');
+            const err = document.getElementById('loginError');
+            
+            btn.innerText = "Verificando...";
+            btn.disabled = true;
+            err.classList.add('hidden');
+            
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: 'login', password: pass })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success'){
+                    sessionStorage.setItem('ebdAdminToken', res.token);
+                    showApp();
+                } else {
+                    err.innerText = "Senha incorreta";
+                    err.classList.remove('hidden');
+                    btn.innerText = "ENTRAR";
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                err.innerText = "Erro de conexão";
+                err.classList.remove('hidden');
+                btn.innerText = "ENTRAR";
+                btn.disabled = false;
+            });
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            loadData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('ebdAdminToken');
+            location.reload();
+        }
+
+        // --- CARREGAR DADOS ---
+        function loadData() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando dados...</td></tr>';
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: 'getData' })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success'){
+                    dbData = res.data;
+                    renderTable(dbData);
+                    updateCounters();
+                } else {
+                    alert('Erro ao carregar dados');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Erro de conexão com o servidor.</td></tr>';
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum pedido encontrado.</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                // Formata data
+                const dateObj = new Date(row.data);
+                const dateStr = dateObj.toLocaleDateString('pt-BR');
+                
+                const statusClass = row.status === 'Pago' ? 'status-pago' : 'status-pendente';
+                
+                // Formata Valor
+                const valorNumerico = parseFloat(row.valor) || 0;
+                const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorNumerico);
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800 transition border-b border-slate-800/50";
+                tr.innerHTML = `
+                    <td class="p-4 text-xs text-slate-500">${dateStr}</td>
+                    <td class="p-4">
+                        <div class="font-bold text-white">${row.nome}</div>
+                        <div class="text-xs text-slate-500">${row.email}</div>
+                    </td>
+                    <td class="p-4 hidden md:table-cell text-xs text-slate-400">${row.congregacao}</td>
+                    <td class="p-4 text-center font-bold text-white">${row.qtd}</td>
+                    <td class="p-4 text-primary font-mono text-sm">${money}</td>
+                    <td class="p-4 text-center"><span class="status-badge ${statusClass}">${row.status}</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick='openModal(${JSON.stringify(row).replace(/'/g, "&apos;")})' class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition" title="Gerenciar">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        ${row.whatsapp ? `<a href="https://wa.me/${row.whatsapp.replace(/\D/g,'')}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white p-2 rounded-lg ml-1 transition inline-block"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- FILTROS ---
+        function filterStatus(status) {
+            if(status === 'all') renderTable(dbData);
+            else renderTable(dbData.filter(d => d.status === status));
+        }
+
+        function searchTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = dbData.filter(d => 
+                (d.nome && d.nome.toLowerCase().includes(term)) || 
+                (d.cpf && d.cpf.toString().includes(term)) ||
+                (d.email && d.email.toLowerCase().includes(term))
+            );
+            renderTable(filtered);
+        }
+
+        function updateCounters() {
+            document.getElementById('countAll').innerText = dbData.length;
+            document.getElementById('countPending').innerText = dbData.filter(d => d.status === 'Pendente').length;
+            document.getElementById('countPaid').innerText = dbData.filter(d => d.status === 'Pago').length;
+        }
+
+        // --- MODAL & UPLOAD ---
+        function openModal(row) {
+            document.getElementById('modalRowIndex').value = row.rowIndex;
+            document.getElementById('modalName').innerText = row.nome;
+            document.getElementById('modalCpf').innerText = "CPF: " + row.cpf;
+            document.getElementById('modalStatus').value = row.status;
+            
+            // Link do comprovante atual
+            const proofDiv = document.getElementById('currentProofLink');
+            if(row.comprovante && row.comprovante !== "") {
+                proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="text-primary hover:underline text-xs flex items-center justify-end gap-1"><i class="fa-solid fa-link"></i> Ver comprovante atual</a>`;
+            } else {
+                proofDiv.innerHTML = '<span class="text-slate-600 text-xs">Sem comprovante anexado</span>';
+            }
+
+            // Reset File input
+            document.getElementById('modalFile').value = '';
+            document.getElementById('fileName').classList.add('hidden');
+            document.getElementById('fileLabel').classList.remove('hidden');
+
+            const modal = document.getElementById('actionModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('actionModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+        }
+
+        function previewFile() {
+            const file = document.getElementById('modalFile').files[0];
+            if(file) {
+                document.getElementById('fileLabel').classList.add('hidden');
+                const nameLabel = document.getElementById('fileName');
+                nameLabel.innerText = file.name;
+                nameLabel.classList.remove('hidden');
+            }
+        }
+
+        // --- SALVAR ALTERAÇÕES (UPLOAD) ---
+        function updateOrder(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSave');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const rowIndex = document.getElementById('modalRowIndex').value;
+            const status = document.getElementById('modalStatus').value;
+            const file = document.getElementById('modalFile').files[0];
+
+            const payload = {
+                action: 'updateOrder',
+                rowIndex: rowIndex,
+                status: status,
+                obs: "Atualizado via Painel Externo"
+            };
+
+            // Se tem arquivo, converte para Base64 antes de enviar
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    // Pega apenas o conteúdo base64 após a vírgula
+                    const base64 = evt.target.result.split(',')[1]; 
+                    payload.fileData = base64;
+                    payload.fileName = file.name;
+                    payload.fileType = file.type;
+                    sendUpdate(payload, btn);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                sendUpdate(payload, btn);
+            }
+        }
+
+        function sendUpdate(payload, btn) {
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    closeModal();
+                    loadData(); // Recarrega tabela
+                    alert('Pedido atualizado com sucesso!');
+                } else {
+                    alert('Erro: ' + res.message);
+                }
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
+                btn.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Erro de conexão ao salvar.');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
+                btn.disabled = false;
+            });
+        }
+
+    </script>
+</body>
+</html>
