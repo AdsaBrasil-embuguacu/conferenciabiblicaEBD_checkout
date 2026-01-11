@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conferência EBD | Gestão de Pulseiras</title>
+    <title>Conferência EBD | Checkout</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -17,189 +17,295 @@
 
     <style>
         :root {
-            --bg-dark: #0a0a0a;
-            --bg-card: #141414;
             --gold: #d4af37;
-            --gold-hover: #b5952f;
-            --text-main: #f0f0f0;
+            --gold-dark: #b5952f;
+            --dark-bg: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #ffffff;
             --text-muted: #a0a0a0;
-            --danger: #ff4d4d;
+            --input-bg: #2a2a2a;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            margin: 0;
+            padding: 15px;
         }
 
-        .app-container {
+        /* Container Principal (O Modal) */
+        .checkout-modal {
+            background-color: var(--panel-bg);
             width: 100%;
-            max-width: 500px;
-            margin: auto;
-            padding: 20px;
+            max-width: 900px;
+            min-height: 600px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            flex-direction: row;
         }
 
-        /* Tipografia */
-        .title-hero {
+        /* Lateral Esquerda (Imagem e Info) */
+        .modal-side {
+            width: 40%;
+            background-color: #000;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        /* Imagem de Fundo com Overlay */
+        .modal-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('https://adsabrasil-embuguacu.github.io/conferenciabiblicaEBD_checkout/Confer%C3%AAncia%20Escola%20B%C3%ADblica%202026.jpg');
+            background-size: cover;
+            background-position: center top;
+            opacity: 0.6;
+            transition: transform 10s ease;
+            z-index: 1;
+        }
+        
+        .checkout-modal:hover .modal-side::before {
+            transform: scale(1.1);
+        }
+
+        .side-content {
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .side-title {
             font-family: 'Black Ops One', cursive;
-            color: var(--gold);
-            text-transform: uppercase;
-            text-align: center;
-            letter-spacing: 2px;
             font-size: 2.5rem;
+            color: var(--gold);
+            line-height: 1;
             margin-bottom: 10px;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
-        .subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
+        .side-price-tag {
+            background: var(--gold);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Área Direita (Formulário) */
+        .modal-form {
+            width: 60%;
+            padding: 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Scroll se necessário */
+            max-height: 90vh;
+        }
+
+        .form-header h2 {
+            font-weight: 300;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-size: 1.5rem;
         }
-
-        /* Cards */
-        .custom-card {
-            background-color: var(--bg-card);
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease;
-        }
-
-        .alert-box {
-            background: rgba(255, 77, 77, 0.1);
-            border-left: 4px solid var(--danger);
-            padding: 15px;
-            border-radius: 5px;
+        
+        .highlight-date {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: inline-block;
+            border: 1px solid var(--gold);
+            padding: 4px 10px;
+            border-radius: 4px;
             margin-bottom: 20px;
         }
 
-        .info-box {
-            background: rgba(212, 175, 55, 0.1);
-            border-left: 4px solid var(--gold);
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        /* Inputs Customizados - ESTILO CORRIGIDO */
+        label {
+            color: var(--gold);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        /* Inputs */
-        .form-control, .form-select {
-            background-color: #222;
+        .custom-input, .custom-select {
+            background-color: var(--input-bg);
             border: 1px solid #444;
+            border-radius: 6px;
             color: white;
             padding: 12px;
-            border-radius: 8px;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: all 0.3s;
         }
 
-        .form-control:focus, .form-select:focus {
-            background-color: #222;
+        .custom-input:focus, .custom-select:focus {
+            outline: none;
             border-color: var(--gold);
+            background-color: #333;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
             color: white;
-            box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25);
         }
 
-        /* Botões */
-        .btn-gold {
-            background-color: var(--gold);
+        /* Estilização específica das options do select para não ficarem brancas */
+        .custom-select option {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 10px;
+        }
+
+        /* Opções de Pagamento (Cards) */
+        .payment-options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pay-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .pay-card:hover { border-color: #666; }
+        .pay-card.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+        }
+        
+        .pay-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #333;
+        }
+
+        .radio-custom { accent-color: var(--gold); transform: scale(1.2); }
+
+        /* Botão Principal */
+        .btn-confirm {
+            background: linear-gradient(45deg, var(--gold-dark), var(--gold));
+            border: none;
             color: #000;
             font-weight: 800;
             text-transform: uppercase;
-            border: none;
             padding: 15px;
-            border-radius: 50px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px; 
             width: 100%;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
 
-        .btn-gold:hover {
-            background-color: var(--gold-hover);
+        .btn-confirm:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
-            color: #000;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        .btn-confirm:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .btn-outline-gold {
-            background: transparent;
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            font-weight: 600;
-            border-radius: 50px;
-            padding: 10px 20px;
-            transition: all 0.3s;
+        /* Steps Indicator */
+        .steps {
+            display: flex;
+            margin-bottom: 20px;
         }
-
-        .btn-outline-gold:hover {
-            background: var(--gold);
-            color: #000;
+        .step {
+            height: 4px;
+            flex-grow: 1;
+            background: #333;
+            margin-right: 5px;
+            border-radius: 2px;
         }
+        .step.active { background: var(--gold); }
 
-        /* Seleção de Pagamento */
-        .payment-option {
-            background: #222;
-            border: 1px solid #444;
+        /* QR Code Area */
+        .qr-box {
+            background: white;
             padding: 15px;
             border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: inline-block;
             margin-bottom: 10px;
         }
-
-        .payment-option:hover {
-            border-color: var(--gold);
+        .qr-title {
+            color: var(--gold);
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
-        .payment-option.selected {
-            background: rgba(212, 175, 55, 0.1);
-            border-color: var(--gold);
+        /* Scrollbar customizada */
+        .modal-form::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-form::-webkit-scrollbar-track {
+            background: #1e1e1e; 
+        }
+        .modal-form::-webkit-scrollbar-thumb {
+            background: #444; 
+            border-radius: 4px;
+        }
+        .modal-form::-webkit-scrollbar-thumb:hover {
+            background: var(--gold); 
         }
 
-        .radio-custom {
-            accent-color: var(--gold);
-            transform: scale(1.5);
+        /* Responsividade Mobile */
+        @media (max-width: 768px) {
+            .checkout-modal {
+                flex-direction: column;
+                height: auto;
+                min-height: auto;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+            .modal-side {
+                width: 100%;
+                height: 180px; 
+                padding: 20px;
+                flex-shrink: 0;
+            }
+            .modal-form {
+                width: 100%;
+                padding: 20px;
+                overflow-y: visible; /* Deixa o scroll pro container pai no mobile */
+            }
+            .side-title { font-size: 2rem; }
         }
-
-        /* Steps */
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            gap: 5px;
-        }
-        .step-dot {
-            width: 10px;
-            height: 10px;
-            background: #333;
-            border-radius: 50%;
-        }
-        .step-dot.active {
-            background: var(--gold);
-            box-shadow: 0 0 10px var(--gold);
-        }
-
-        /* Animação */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        
+        /* Utilitários */
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
+        .text-gold { color: var(--gold); }
     </style>
 </head>
 <body>
@@ -210,295 +316,300 @@
         const { useState, useEffect } = React;
 
         // --- CONFIGURAÇÕES ---
-        const CONST_PIX_KEY = "000.000.000-00"; // INSIRA A CHAVE PIX DO RESPONSÁVEL LOCAL
-        const CONST_PIX_NAME = "NOME DO RESPONSAVEL"; // NOME DO DONO DA CONTA
-        const CONST_WHATSAPP_NUMBER = "5511999999999"; // NÚMERO PARA RECEBER COMPROVANTE (SEM FORMATACAO)
-        const CONST_GOOGLE_SHEET_URL = ""; // URL DO APP SCRIPT (Opcional, deixe vazio se não usar)
-
-        const VALOR_INTEGRAL = 70.00;
+        const CONST_PIX_KEY_VISTA = "31504700508"; // CHAVE PIX ÚNICA/ENTRADA
+        const CONST_PIX_KEY_PARCELA2 = "38757619875"; // CHAVE PIX SEGUNDA PARCELA (Pode ser a mesma)
+        const CONST_WHATSAPP = "5511999999999"; 
+        
+        const VALOR_TOTAL = 70.00;
         const VALOR_PARCELA = 35.00;
+        const DATA_LIMITE_PARCELAMENTO = new Date('2026-01-10T23:59:59'); // DATA LIMITE: 20/02/2026
 
-        // --- COMPONENTE PRINCIPAL ---
+        const CONGREGACOES = [
+            "CHACARA FLORIDA", "CIPÓ", "KM 37", "JUQUITIBA", "VILA GUIOMAR"
+        ];
+
         function App() {
-            const [step, setStep] = useState(0);
-            const [loading, setLoading] = useState(false);
+            const [step, setStep] = useState(1); // 1: Dados, 2: Pagamento, 3: Pix
             const [formData, setFormData] = useState({
                 nome: '',
+                email: '',
+                cpf: '',
+                telefone: '', // Whatsapp
                 congregacao: '',
-                telefone: '',
                 quantidade: 1,
-                modalidade: 'integral', // integral, p1, p2
-                total: 70.00
+                modalidade: 'integral' // integral, parcelado
             });
+            const [total, setTotal] = useState(VALOR_TOTAL);
+            const [parcelamentoDisponivel, setParcelamentoDisponivel] = useState(true);
 
-            // Atualiza total quando quantidade ou modalidade muda
+            // Verifica data limite ao carregar
             useEffect(() => {
-                let unitPrice = 0;
-                if (formData.modalidade === 'integral') unitPrice = VALOR_INTEGRAL;
-                else unitPrice = VALOR_PARCELA;
-                
-                setFormData(prev => ({ ...prev, total: unitPrice * prev.quantidade }));
+                const hoje = new Date();
+                if (hoje > DATA_LIMITE_PARCELAMENTO) {
+                    setParcelamentoDisponivel(false);
+                }
+            }, []);
+
+            // Calcula total dinâmico
+            useEffect(() => {
+                // Se for integral: valor total * qtd
+                // Se for parcelado: valor da entrada (parcela 1) * qtd (para exibir o que paga agora)
+                // Mas vamos guardar o valor que ele vai pagar AGORA no estado total
+                const priceNow = formData.modalidade === 'integral' ? VALOR_TOTAL : VALOR_PARCELA;
+                setTotal(priceNow * formData.quantidade);
             }, [formData.quantidade, formData.modalidade]);
 
-            const handleInputChange = (e) => {
+            const handleChange = (e) => {
                 const { name, value } = e.target;
                 setFormData(prev => ({ ...prev, [name]: value }));
             };
 
-            const nextStep = () => setStep(prev => prev + 1);
-            const prevStep = () => setStep(prev => prev - 1);
+            // Funções de Navegação
+            const goNext = () => setStep(prev => prev + 1);
+            const goBack = () => setStep(prev => prev - 1);
 
-            // --- VIEW: HOME ---
-            if (step === 0) {
-                return (
-                    <div className="app-container fade-in">
-                        <div className="text-center mb-5">
-                            <h1 className="title-hero">Conferência<br/>EBD</h1>
-                            <p className="subtitle">14 de Março - Chácara Flórida</p>
-                        </div>
+            // Gerador de Link WhatsApp
+            const finalizarPedido = () => {
+                const tipoPgto = formData.modalidade === 'integral' 
+                    ? 'À Vista (Integral)' 
+                    : 'Parcelado (2x)';
 
-                        <div className="custom-card">
-                            <h3 style={{color: 'var(--gold)', fontFamily: 'Black Ops One', marginBottom: '20px'}}>
-                                <i className="fa-solid fa-ticket"></i> PULSEIRA DE ACESSO
-                            </h3>
-                            
-                            <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2">
-                                <span>Investimento:</span>
-                                <span className="fw-bold" style={{color: 'var(--gold)'}}>R$ 70,00</span>
-                            </div>
+                const msg = `*COMPROVANTE PULSEIRA EBD 2026*%0A` +
+                            `--------------------------------%0A` +
+                            `👤 *Nome:* ${formData.nome}%0A` +
+                            `📧 *Email:* ${formData.email}%0A` +
+                            `🆔 *CPF:* ${formData.cpf}%0A` +
+                            `📱 *Zap:* ${formData.telefone}%0A` +
+                            `⛪ *Congregação:* ${formData.congregacao}%0A` +
+                            `--------------------------------%0A` +
+                            `🎟 *Qtd:* ${formData.quantidade}%0A` +
+                            `💲 *Modalidade:* ${tipoPgto}%0A` +
+                            `💰 *Valor Pago Agora:* R$ ${total.toFixed(2).replace('.',',')}%0A` +
+                            `--------------------------------%0A` +
+                            `Segue anexo o comprovante PIX.`;
+                
+                window.location.href = `https://wa.me/${CONST_WHATSAPP}?text=${msg}`;
+            };
 
-                            <div className="alert-box">
-                                <strong className="d-block mb-1"><i className="fa-solid fa-calendar-check"></i> PRAZO DE ACERTO:</strong>
-                                <span style={{fontSize: '1.2rem', fontWeight: 'bold'}}>06/03 (Sexta-feira)</span>
-                                <div className="small mt-1 text-white-50">Data limite para acerto no campo.</div>
-                            </div>
-
-                            <div className="info-box text-center">
-                                <i className="fa-brands fa-pix fa-2x mb-2" style={{color: 'var(--gold)'}}></i><br/>
-                                <strong>PAGAMENTO EXCLUSIVO VIA PIX</strong><br/>
-                                <small>❌ Proibido cartão ou depósito em conta da igreja.</small>
-                            </div>
-
-                            <button className="btn-gold" onClick={nextStep}>
-                                GARANTIR MINHA PULSEIRA
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-
-            // --- VIEW: PASSO 1 (DADOS) ---
-            if (step === 1) {
-                return (
-                    <div className="app-container fade-in">
-                        <StepIndicator step={1} />
-                        <h4 className="text-center mb-4">Seus Dados</h4>
-                        <div className="custom-card">
-                            <div className="mb-3">
-                                <label className="form-label text-muted small">Nome Completo</label>
-                                <input type="text" className="form-control" name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Ex: João da Silva" />
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label text-muted small">Congregação</label>
-                                <input type="text" className="form-control" name="congregacao" value={formData.congregacao} onChange={handleInputChange} placeholder="Ex: Sede, Jd. Oliveiras..." />
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label text-muted small">WhatsApp (com DDD)</label>
-                                <input type="tel" className="form-control" name="telefone" value={formData.telefone} onChange={handleInputChange} placeholder="(11) 99999-9999" />
-                            </div>
-                            
-                            <div className="d-flex gap-2 mt-4">
-                                <button className="btn btn-outline-secondary w-50 rounded-pill" onClick={prevStep}>Voltar</button>
-                                <button 
-                                    className="btn-gold w-50" 
-                                    onClick={nextStep}
-                                    disabled={!formData.nome || !formData.congregacao || !formData.telefone}
-                                >
-                                    Próximo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            // --- VIEW: PASSO 2 (PAGAMENTO) ---
-            if (step === 2) {
-                return (
-                    <div className="app-container fade-in">
-                        <StepIndicator step={2} />
-                        <h4 className="text-center mb-4">Configurar Pagamento</h4>
-                        <div className="custom-card">
-                            
-                            <div className="mb-4">
-                                <label className="form-label text-muted small">Quantidade de Pulseiras</label>
-                                <select className="form-select" name="quantidade" value={formData.quantidade} onChange={handleInputChange}>
-                                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-                                </select>
-                            </div>
-
-                            <label className="form-label text-muted small mb-2">O que você vai pagar agora?</label>
-                            
-                            <div 
-                                className={`payment-option ${formData.modalidade === 'integral' ? 'selected' : ''}`}
-                                onClick={() => setFormData({...formData, modalidade: 'integral'})}
-                            >
-                                <div>
-                                    <strong>Valor Total</strong>
-                                    <div className="small text-muted">Pagamento único</div>
-                                </div>
-                                <div className="text-end">
-                                    <div style={{color: 'var(--gold)', fontWeight: 'bold'}}>R$ 70,00</div>
-                                    <input type="radio" className="radio-custom" checked={formData.modalidade === 'integral'} readOnly />
-                                </div>
-                            </div>
-
-                            <div 
-                                className={`payment-option ${formData.modalidade === 'p1' ? 'selected' : ''}`}
-                                onClick={() => setFormData({...formData, modalidade: 'p1'})}
-                            >
-                                <div>
-                                    <strong>1ª Parcela</strong>
-                                    <div className="small text-muted">Vencimento Mês 1</div>
-                                </div>
-                                <div className="text-end">
-                                    <div style={{color: 'var(--gold)', fontWeight: 'bold'}}>R$ 35,00</div>
-                                    <input type="radio" className="radio-custom" checked={formData.modalidade === 'p1'} readOnly />
-                                </div>
-                            </div>
-
-                            <div 
-                                className={`payment-option ${formData.modalidade === 'p2' ? 'selected' : ''}`}
-                                onClick={() => setFormData({...formData, modalidade: 'p2'})}
-                            >
-                                <div>
-                                    <strong>2ª Parcela</strong>
-                                    <div className="small text-muted">Acerto Final</div>
-                                </div>
-                                <div className="text-end">
-                                    <div style={{color: 'var(--gold)', fontWeight: 'bold'}}>R$ 35,00</div>
-                                    <input type="radio" className="radio-custom" checked={formData.modalidade === 'p2'} readOnly />
-                                </div>
-                            </div>
-
-                            <div className="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
-                                <span className="text-muted">Total a Pagar:</span>
-                                <span style={{fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--gold)'}}>
-                                    R$ {formData.total.toFixed(2).replace('.',',')}
-                                </span>
-                            </div>
-
-                            <div className="d-flex gap-2 mt-4">
-                                <button className="btn btn-outline-secondary w-50 rounded-pill" onClick={prevStep}>Voltar</button>
-                                <button className="btn-gold w-50" onClick={nextStep}>Ir para PIX</button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            // --- VIEW: PASSO 3 (CHECKOUT) ---
-            if (step === 3) {
-                const copyPix = () => {
-                    navigator.clipboard.writeText(CONST_PIX_KEY);
-                    alert("Chave PIX copiada!");
-                };
-
-                const finishOrder = async () => {
-                    setLoading(true);
-                    
-                    // 1. Enviar para Google Sheets (Se configurado)
-                    if (CONST_GOOGLE_SHEET_URL) {
-                        try {
-                            await fetch(CONST_GOOGLE_SHEET_URL, {
-                                method: 'POST',
-                                mode: 'no-cors', // Importante para scripts simples do Google
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    data: new Date().toLocaleString(),
-                                    ...formData
-                                })
-                            });
-                        } catch (e) {
-                            console.error("Erro ao salvar na planilha", e);
-                            // Não bloqueia o fluxo se falhar a planilha
-                        }
-                    }
-
-                    // 2. Gerar Link WhatsApp
-                    const modalidadeTexto = {
-                        'integral': 'Valor Total',
-                        'p1': '1ª Parcela',
-                        'p2': '2ª Parcela'
-                    }[formData.modalidade];
-
-                    const msg = `*COMPROVANTE PULSEIRA EBD*%0A` +
-                                `--------------------------------%0A` +
-                                `👤 *Nome:* ${formData.nome}%0A` +
-                                `⛪ *Congregação:* ${formData.congregacao}%0A` +
-                                `🎟 *Qtd:* ${formData.quantidade}%0A` +
-                                `💲 *Tipo:* ${modalidadeTexto}%0A` +
-                                `💰 *Valor:* R$ ${formData.total.toFixed(2).replace('.',',')}%0A` +
-                                `--------------------------------%0A` +
-                                `Segue o comprovante em anexo.`;
-
-                    const waLink = `https://wa.me/${CONST_WHATSAPP_NUMBER}?text=${msg}`;
-                    
-                    setLoading(false);
-                    // Redirecionar
-                    window.location.href = waLink;
-                };
-
-                return (
-                    <div className="app-container fade-in">
-                        <StepIndicator step={3} />
-                        <h4 className="text-center mb-4">Realizar Pagamento</h4>
-                        
-                        <div className="custom-card text-center">
-                            <p className="text-muted mb-2">Valor a transferir</p>
-                            <h2 style={{color: 'var(--gold)', fontFamily: 'Black Ops One', fontSize: '2.5rem'}}>
-                                R$ {formData.total.toFixed(2).replace('.',',')}
-                            </h2>
-                            <hr className="border-secondary my-4"/>
-                            
-                            <p className="mb-1">Chave PIX (Responsável Local)</p>
-                            <div className="bg-dark p-3 rounded border border-secondary mb-3 d-flex justify-content-between align-items-center">
-                                <span className="text-truncate me-2">{CONST_PIX_KEY}</span>
-                                <button className="btn btn-sm btn-outline-light" onClick={copyPix}>
-                                    <i className="fa-regular fa-copy"></i>
-                                </button>
-                            </div>
-                            <p className="small text-muted">Favorecido: {CONST_PIX_NAME}</p>
-
-                            <div className="alert alert-warning small mt-3" role="alert">
-                                <i className="fa-solid fa-triangle-exclamation"></i> <strong>Atenção:</strong> Não aceitamos comprovante de agendamento.
-                            </div>
-                        </div>
-
-                        <div className="d-grid gap-2">
-                            <button 
-                                className="btn-gold" 
-                                onClick={finishOrder}
-                                disabled={loading}
-                            >
-                                {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-whatsapp"></i>} ENVIAR COMPROVANTE
-                            </button>
-                            <button className="btn btn-link text-muted text-decoration-none" onClick={prevStep}>
-                                Voltar e corrigir
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-        }
-
-        // --- COMPONENTE AUXILIAR: Step Indicator ---
-        function StepIndicator({ step }) {
             return (
-                <div className="step-indicator">
-                    <div className={`step-dot ${step >= 1 ? 'active' : ''}`}></div>
-                    <div className={`step-dot ${step >= 2 ? 'active' : ''}`}></div>
-                    <div className={`step-dot ${step >= 3 ? 'active' : ''}`}></div>
+                <div className="checkout-modal fade-in">
+                    
+                    {/* LADO ESQUERDO: Visual */}
+                    <div className="modal-side">
+                        <div className="side-content">
+                            <h1 className="side-title">13 de março<br/>2026</h1>
+                            <p style={{color: '#ccc', letterSpacing: '1px'}}>ADSA BRASIL SANTO AMARO</p>
+                            <div className="side-price-tag">R$ 70,00</div>
+                        </div>
+                    </div>
+
+                    {/* LADO DIREITO: Formulário */}
+                    <div className="modal-form">
+                        
+                        {/* Indicador de Passos */}
+                        <div className="steps">
+                            <div className={`step ${step >= 1 ? 'active' : ''}`}></div>
+                            <div className={`step ${step >= 2 ? 'active' : ''}`}></div>
+                            <div className={`step ${step >= 3 ? 'active' : ''}`}></div>
+                        </div>
+
+                        {/* PASSO 1: DADOS PESSOAIS */}
+                        {step === 1 && (
+                            <div className="fade-in d-flex flex-column h-100">
+                                <div className="form-header">
+                                    <h2>Seus Dados</h2>
+                                    <span className="highlight-date">
+                                        <i className="fa-regular fa-clock me-1"></i> Preencha para continuar
+                                    </span>
+                                </div>
+
+                                <div className="mt-2">
+                                    <label>Nome Completo</label>
+                                    <input type="text" className="custom-input" name="nome" value={formData.nome} onChange={handleChange} placeholder="Digite seu nome..." />
+
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <label>CPF</label>
+                                            <input type="text" className="custom-input" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="000.000.000-00" />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label>WhatsApp</label>
+                                            <input type="tel" className="custom-input" name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(11) 99999-9999" />
+                                        </div>
+                                    </div>
+
+                                    <label>E-mail</label>
+                                    <input type="email" className="custom-input" name="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" />
+
+                                    <label>Congregação</label>
+                                    <select className="custom-select" name="congregacao" value={formData.congregacao} onChange={handleChange}>
+                                        <option value="">Selecione sua igreja...</option>
+                                        {CONGREGACOES.map(cong => (
+                                            <option key={cong} value={cong}>{cong}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button 
+                                    className="btn-confirm" 
+                                    onClick={goNext}
+                                    disabled={!formData.nome || !formData.email || !formData.cpf || !formData.telefone || !formData.congregacao}
+                                >
+                                    Avançar <i className="fa-solid fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* PASSO 2: PAGAMENTO */}
+                        {step === 2 && (
+                            <div className="fade-in d-flex flex-column h-100">
+                                <div className="form-header">
+                                    <h2>Pagamento</h2>
+                                    <p className="text-muted small">Escolha como deseja pagar</p>
+                                </div>
+
+                                <div className="mt-3">
+                                    <label>Quantidade de Pulseiras</label>
+                                    <select className="custom-select" name="quantidade" value={formData.quantidade} onChange={handleChange}>
+                                        {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+
+                                    <label>Modalidade</label>
+                                    <div className="payment-options">
+                                        {/* Opção Integral */}
+                                        <div 
+                                            className={`pay-card ${formData.modalidade === 'integral' ? 'active' : ''}`}
+                                            onClick={() => setFormData({...formData, modalidade: 'integral'})}
+                                        >
+                                            <div>
+                                                <div className="fw-bold">À Vista (Integral)</div>
+                                                <small className="text-muted">Pagamento único</small>
+                                            </div>
+                                            <div className="text-end">
+                                                <div className="text-gold fw-bold">R$ 70,00</div>
+                                                <input type="radio" checked={formData.modalidade === 'integral'} readOnly className="radio-custom"/>
+                                            </div>
+                                        </div>
+
+                                        {/* Opção Parcelada - Condicional */}
+                                        {parcelamentoDisponivel ? (
+                                            <div 
+                                                className={`pay-card ${formData.modalidade === 'parcelado' ? 'active' : ''}`}
+                                                onClick={() => setFormData({...formData, modalidade: 'parcelado'})}
+                                            >
+                                                <div>
+                                                    <div className="fw-bold">Parcelado em 2x</div>
+                                                    <small className="text-muted">1ª agora + 2ª em 30 dias</small>
+                                                </div>
+                                                <div className="text-end">
+                                                    <div className="text-gold fw-bold">2x R$ 35,00</div>
+                                                    <input type="radio" checked={formData.modalidade === 'parcelado'} readOnly className="radio-custom"/>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="pay-card disabled" title="Prazo encerrado em 20/02">
+                                                <div>
+                                                    <div className="fw-bold text-muted">Parcelado em 2x</div>
+                                                    <small className="text-danger">Encerrado em 20/02</small>
+                                                </div>
+                                                <div className="text-end">
+                                                    <div className="text-muted fw-bold">2x R$ 35,00</div>
+                                                    <i className="fa-solid fa-lock text-muted"></i>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="d-flex justify-content-between align-items-center mt-4 border-top border-secondary pt-3">
+                                        <span className="text-muted">Pagar Agora:</span>
+                                        <span className="h4 text-gold mb-0 fw-bold">R$ {total.toFixed(2).replace('.',',')}</span>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex gap-2 mt-auto">
+                                    <button className="btn btn-outline-secondary w-50" onClick={goBack}>Voltar</button>
+                                    <button className="btn-confirm w-50 m-0" onClick={goNext}>Gerar PIX</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PASSO 3: PIX & ENVIO */}
+                        {step === 3 && (
+                            <div className="fade-in d-flex flex-column h-100 text-center">
+                                <div className="form-header">
+                                    <h2>Finalizar</h2>
+                                    <p className="text-muted small">Realize o pagamento abaixo</p>
+                                </div>
+
+                                <div style={{overflowY: 'auto', maxHeight: '350px'}}>
+                                    
+                                    {/* CASO 1: INTEGRAL */}
+                                    {formData.modalidade === 'integral' && (
+                                        <div className="mb-4">
+                                            <div className="qr-title">Pagamento Único (Válido por 24h)</div>
+                                            <div className="qr-box">
+                                                {/* QR Code Simulado - Gerador do Google Charts */}
+                                                <img src={`https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${CONST_PIX_KEY_VISTA}`} alt="QR Code" />
+                                            </div>
+                                            <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2">
+                                                <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_VISTA}</span>
+                                                <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_VISTA)}>
+                                                    <i className="fa-regular fa-copy"></i>
+                                                </button>
+                                            </div>
+                                            <div className="text-gold fw-bold mt-2">Valor: R$ {total.toFixed(2).replace('.',',')}</div>
+                                        </div>
+                                    )}
+
+                                    {/* CASO 2: PARCELADO */}
+                                    {formData.modalidade === 'parcelado' && (
+                                        <>
+                                            <div className="mb-4 pb-3 border-bottom border-secondary">
+                                                <div className="qr-title">1ª Parcela (Pagar Agora) - Válido 24h</div>
+                                                <div className="qr-box">
+                                                    <img src={`https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${CONST_PIX_KEY_VISTA}`} alt="QR Code 1" />
+                                                </div>
+                                                <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_VISTA}</span>
+                                                    <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_VISTA)}>
+                                                        <i className="fa-regular fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                                <div className="text-gold fw-bold mt-2">Valor: R$ {(VALOR_PARCELA * formData.quantidade).toFixed(2).replace('.',',')}</div>
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <div className="qr-title text-muted">2ª Parcela (Vencimento em 30 dias)</div>
+                                                <div className="qr-box opacity-75">
+                                                    <img src={`https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${CONST_PIX_KEY_PARCELA2}`} alt="QR Code 2" />
+                                                </div>
+                                                <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2 opacity-75">
+                                                    <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_PARCELA2}</span>
+                                                    <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_PARCELA2)}>
+                                                        <i className="fa-regular fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                                <small className="text-muted d-block mt-2">Guarde este código para o próximo mês.</small>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="alert alert-warning small text-start mt-2 p-2">
+                                    <i className="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <strong>Atenção:</strong> Após pagar, clique no botão abaixo para enviar o comprovante no WhatsApp.
+                                </div>
+
+                                <div className="d-flex gap-2 mt-auto">
+                                    <button className="btn btn-outline-secondary w-50" onClick={goBack}>Voltar</button>
+                                    <button className="btn-confirm w-50 m-0" onClick={finalizarPedido}>
+                                        <i className="fa-brands fa-whatsapp me-2"></i> Enviar Comp.
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
                 </div>
             );
         }
