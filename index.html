@@ -240,17 +240,20 @@
             background: transparent;
             border: 1px solid #444;
             color: var(--text-muted);
-            font-size: 0.75rem;
-            padding: 4px 10px;
+            font-size: 0.8rem;
+            padding: 6px 15px;
             border-radius: 4px;
             margin-top: 5px;
             transition: all 0.2s;
             cursor: pointer;
+            width: 100%;
+            text-align: center;
         }
         
         .btn-copy-key:hover {
             border-color: var(--gold);
             color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
         }
 
         /* --- MODAL DE FEEDBACK MELHORADO --- */
@@ -294,6 +297,31 @@
         .modal-form::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         .modal-form::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
+        /* Botão Admin Flutuante */
+        .admin-float-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(30, 30, 30, 0.8);
+            color: #666;
+            border: 1px solid #444;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            z-index: 10000;
+        }
+        .admin-float-btn:hover {
+            background-color: var(--gold);
+            color: #000;
+            transform: scale(1.1);
+            border-color: var(--gold);
+        }
+
         /* Mobile */
         @media (max-width: 768px) {
             .checkout-modal { flex-direction: column; height: auto; min-height: auto; max-height: 95vh; overflow-y: auto; }
@@ -310,6 +338,10 @@
 <body>
 
     <div id="root"></div>
+
+    <a href="https://adsabrasil-embuguacu.github.io/conferenciabiblicaEBD_checkout/adminstrator/index.html" class="admin-float-btn" title="Área Administrativa">
+        <i class="fa-solid fa-lock"></i>
+    </a>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
@@ -403,7 +435,7 @@
         // =========================================================
         // CONFIGURAÇÕES DO EVENTO
         // =========================================================
-        const CONST_PIX_KEY = "11623755824"; // EX: SEU CPF OU EMAIL
+        const CONST_PIX_KEY = "11623755824"; 
         const CONST_PIX_NAME = "WALTER PEREIRA MARQUES";
         const CONST_PIX_CITY = "SAO PAULO"; 
         const CONST_WHATSAPP = "5511932595718"; 
@@ -416,14 +448,13 @@
             "CHACARA FLORIDA", "CIPÓ", "KM 37", "JUQUITIBA", "VILA GUIOMAR"
         ];
 
-        // Componente auxiliar para chave simples
+        // Componente auxiliar modificado para copiar o Payload dinâmico
         const KeyDisplay = ({ onCopy }) => (
             <div className="d-flex flex-column align-items-center mt-3 mb-2 pt-2 border-top border-secondary w-100">
-                <span className="text-muted small mb-1" style={{fontSize: '0.75rem'}}>Prefere digitar a chave?</span>
-                <button className="btn-copy-key d-flex align-items-center gap-2" onClick={onCopy} title="Copiar CPF">
-                    <i className="fa-regular fa-id-card"></i> 
-                    Chave CPF: {CONST_PIX_KEY}
-                    <i className="fa-regular fa-copy"></i>
+                <span className="text-muted small mb-1" style={{fontSize: '0.75rem'}}>Problemas com o QR Code?</span>
+                <button className="btn-copy-key d-flex align-items-center justify-content-center gap-2" onClick={onCopy} title="Copia o código Pix completo com valor">
+                    <i className="fa-regular fa-paste"></i> 
+                    Copiar Código Pix
                 </button>
             </div>
         );
@@ -487,7 +518,6 @@
                     ).getPayload();
                     
                     newPayloads.p1 = pixP1;
-                    // p2 não é gerado aqui, pois será cobrado por e-mail
                 }
 
                 setGeneratedPayloads(newPayloads);
@@ -502,29 +532,27 @@
             const goNext = () => setStep(prev => prev + 1);
             const goBack = () => setStep(prev => prev - 1);
 
-            const copyToClipboard = (text, isKey = false) => {
+            const copyToClipboard = (text) => {
                 navigator.clipboard.writeText(text).then(() => {
-                    setModalText(isKey ? "Chave CPF copiada!" : "Código 'Copia e Cola' copiado!");
+                    setModalText("Código Pix Copiado!");
                     setShowCopyModal(true);
                     setTimeout(() => setShowCopyModal(false), 2000);
                 });
             };
 
             // =============================================================
-            // FUNÇÃO ATUALIZADA COM SUA API E LÓGICA DE SALVAMENTO
+            // FUNÇÃO ATUALIZADA
             // =============================================================
             const finalizarPedido = async () => {
-                if (isSubmitting) return; // Evita duplo clique
+                if (isSubmitting) return; 
                 setIsSubmitting(true);
 
-                // URL fornecida pelo usuário
                 const API_URL = "https://script.google.com/macros/s/AKfycbwk4myV5ohip_S2cDXGouTrmE00OdlKeBR3FEa_j2R66JRVMz6wM-DM98hmIA4sUJ_-1Q/exec";
                 
                 const tipoPgto = formData.modalidade === 'integral' 
                     ? 'À Vista (Integral)' 
                     : 'Parcelado (Entrada + 1x)';
                 
-                // Calcula o valor TOTAL do pedido (para registro) e não apenas o pago agora
                 const valorTotalPedido = formData.modalidade === 'integral' ? total : total * 2;
 
                 const orderData = {
@@ -533,11 +561,10 @@
                     tipoPgto: tipoPgto
                 };
 
-                // Envia para a planilha do Google Apps Script
                 try {
                     await fetch(API_URL, {
                         method: 'POST',
-                        mode: 'no-cors', // Importante para enviar dados sem erro de CORS (fire-and-forget)
+                        mode: 'no-cors', 
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -547,10 +574,9 @@
                         })
                     });
                 } catch (error) {
-                    console.error("Erro ao salvar pedido na planilha (prosseguindo para WhatsApp):", error);
+                    console.error("Erro ao salvar pedido na planilha:", error);
                 }
 
-                // Monta mensagem do WhatsApp
                 const msg = `*COMPROVANTE PULSEIRA EBD 2026*%0A` +
                             `--------------------------------%0A` +
                             `👤 *Nome:* ${formData.nome}%0A` +
@@ -566,14 +592,12 @@
                             `--------------------------------%0A` +
                             `Segue anexo o comprovante.`;
                 
-                // Redireciona
                 window.location.href = `https://wa.me/${CONST_WHATSAPP}?text=${msg}`;
             };
 
             return (
                 <div className="checkout-modal fade-in">
                     
-                    {/* MODAL DE FEEDBACK MELHORADO */}
                     <div className={`copy-modal-overlay ${showCopyModal ? 'show' : ''}`}>
                         <div className="copy-modal-content">
                             {showCopyModal && (
@@ -590,7 +614,7 @@
                         </div>
                     </div>
 
-                    {/* LADO ESQUERDO: Visual */}
+                    {/* LADO ESQUERDO */}
                     <div className="modal-side">
                         <div className="side-content">
                             <h1 className="side-title">14 DE MARÇO<br/>2026</h1>
@@ -603,7 +627,7 @@
                         </div>
                     </div>
 
-                    {/* LADO DIREITO: Formulário */}
+                    {/* LADO DIREITO */}
                     <div className="modal-form">
                         
                         <div className="steps">
@@ -612,7 +636,7 @@
                             <div className={`step ${step >= 3 ? 'active' : ''}`}></div>
                         </div>
 
-                        {/* PASSO 1: DADOS PESSOAIS */}
+                        {/* PASSO 1 */}
                         {step === 1 && (
                             <div className="fade-in d-flex flex-column h-100">
                                 <div className="form-header">
@@ -659,7 +683,7 @@
                             </div>
                         )}
 
-                        {/* PASSO 2: PAGAMENTO */}
+                        {/* PASSO 2 */}
                         {step === 2 && (
                             <div className="fade-in d-flex flex-column h-100">
                                 <div className="form-header">
@@ -675,16 +699,24 @@
 
                                     <label>Modalidade</label>
                                     <div className="payment-options">
+                                        
                                         <div 
                                             className={`pay-card ${formData.modalidade === 'integral' ? 'active' : ''}`}
                                             onClick={() => setFormData({...formData, modalidade: 'integral'})}
                                         >
                                             <div>
-                                                <div className="fw-bold">À Vista (Integral)</div>
-                                                <small className="text-muted">Pagamento único</small>
+                                                <div className="fw-bold mb-1">À Vista (Integral)</div>
+                                                <small className="text-muted d-block" style={{fontSize: '0.8rem'}}>
+                                                    Unitário: R$ {VALOR_TOTAL.toFixed(2).replace('.',',')}
+                                                </small>
+                                                <small className="text-muted d-block" style={{fontSize: '0.8rem'}}>
+                                                    Cálculo: {formData.quantidade} x R$ {VALOR_TOTAL.toFixed(2).replace('.',',')}
+                                                </small>
                                             </div>
                                             <div className="text-end">
-                                                <div className="text-gold fw-bold">R$ 70,00</div>
+                                                <div className="text-gold fw-bold mb-1">
+                                                    R$ {(VALOR_TOTAL * formData.quantidade).toFixed(2).replace('.',',')}
+                                                </div>
                                                 <input type="radio" checked={formData.modalidade === 'integral'} readOnly className="radio-custom"/>
                                             </div>
                                         </div>
@@ -695,11 +727,18 @@
                                                 onClick={() => setFormData({...formData, modalidade: 'parcelado'})}
                                             >
                                                 <div>
-                                                    <div className="fw-bold">Parcelado em 2x</div>
-                                                    <small className="text-muted">1ª agora + 2ª em 30 dias</small>
+                                                    <div className="fw-bold mb-1">Parcelado em 2x</div>
+                                                    <small className="text-muted d-block" style={{fontSize: '0.8rem'}}>
+                                                        Parcela Unitária: R$ {VALOR_PARCELA.toFixed(2).replace('.',',')}
+                                                    </small>
+                                                    <small className="text-muted d-block" style={{fontSize: '0.8rem'}}>
+                                                        Cálculo: {formData.quantidade} x R$ {VALOR_PARCELA.toFixed(2).replace('.',',')}
+                                                    </small>
                                                 </div>
                                                 <div className="text-end">
-                                                    <div className="text-gold fw-bold">2x R$ 35,00</div>
+                                                    <div className="text-gold fw-bold mb-1">
+                                                        2x R$ {(VALOR_PARCELA * formData.quantidade).toFixed(2).replace('.',',')}
+                                                    </div>
                                                     <input type="radio" checked={formData.modalidade === 'parcelado'} readOnly className="radio-custom"/>
                                                 </div>
                                             </div>
@@ -754,7 +793,8 @@
                                                 </button>
                                             </div>
                                             
-                                            <KeyDisplay onCopy={() => copyToClipboard(CONST_PIX_KEY, true)} />
+                                            {/* AGORA COPIA O PAYLOAD INTEIRO */}
+                                            <KeyDisplay onCopy={() => copyToClipboard(generatedPayloads.integral)} />
                                             
                                             <small className="text-gold mt-2 d-block">Válido por 24 horas</small>
                                         </div>
@@ -775,7 +815,8 @@
                                                     </button>
                                                 </div>
                                                 
-                                                <KeyDisplay onCopy={() => copyToClipboard(CONST_PIX_KEY, true)} />
+                                                {/* AGORA COPIA O PAYLOAD INTEIRO */}
+                                                <KeyDisplay onCopy={() => copyToClipboard(generatedPayloads.p1)} />
 
                                                 <small className="text-gold mt-1 d-block">Pagar Agora</small>
                                             </div>
