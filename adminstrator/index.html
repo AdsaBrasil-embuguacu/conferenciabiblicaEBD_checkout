@@ -19,16 +19,21 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         .glass-panel { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
         .status-pago { background-color: #dcfce7; color: #166534; }
         .status-pendente { background-color: #fee2e2; color: #991b1b; }
         .status-aguardando { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .mobile-hide { display: none; }
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="h-screen flex flex-col overflow-hidden bg-slate-900">
 
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 px-4">
         <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700">
@@ -46,138 +51,192 @@
         </div>
     </div>
 
-    <div id="appContainer" class="flex h-full hidden">
+    <div id="appContainer" class="flex h-full hidden relative">
         
-        <aside class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col">
-            <div class="p-6 border-b border-slate-800">
-                <h2 class="font-bold text-xl text-primary"><i class="fa-solid fa-ticket mr-2"></i>EBD 2026</h2>
-                <p class="text-xs text-slate-500">Gestão de Pulseiras</p>
+        <div id="mobileMenuOverlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden glass-panel backdrop-blur-sm transition-opacity"></div>
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-30 flex flex-col md:relative">
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-xl text-primary"><i class="fa-solid fa-ticket mr-2"></i>EBD 2026</h2>
+                    <p class="text-xs text-slate-500">Gestão de Pulseiras</p>
+                </div>
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="filterStatus('all')" class="w-full text-left px-4 py-3 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-700 flex justify-between group">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <button onclick="filterStatus('all'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-700 flex justify-between group transition">
                     <span>Todos</span> <span id="countAll" class="bg-slate-900 px-2 rounded text-xs py-1 group-hover:bg-black">0</span>
                 </button>
-                <button onclick="filterStatus('Pendente')" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between">
+                <button onclick="filterStatus('Pendente'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between transition">
                     <span>Pendentes</span> <span id="countPending" class="bg-red-900/50 text-red-200 px-2 rounded text-xs py-1">0</span>
                 </button>
-                <button onclick="filterStatus('Pago')" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between">
+                <button onclick="filterStatus('Pago'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between transition">
                     <span>Pagos</span> <span id="countPaid" class="bg-green-900/50 text-green-200 px-2 rounded text-xs py-1">0</span>
                 </button>
             </nav>
-            <div class="p-4">
-                <button onclick="logout()" class="w-full border border-slate-700 text-slate-400 py-2 rounded hover:bg-slate-800 text-sm">Sair</button>
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="logout()" class="w-full border border-slate-700 text-slate-400 py-2 rounded hover:bg-slate-800 text-sm transition">Sair</button>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col relative">
-            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6">
-                <h2 class="font-bold text-white">Inscrições</h2>
-                <div class="flex gap-2">
-                    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Buscar nome, CPF..." class="bg-slate-800 border-none text-white text-sm rounded-full px-4 py-2 w-64 focus:ring-1 focus:ring-primary outline-none">
-                    <button onclick="loadData()" class="bg-primary text-slate-900 px-3 py-2 rounded-full hover:bg-yellow-600 transition" title="Atualizar"><i class="fa-solid fa-rotate"></i></button>
+        <main class="flex-1 flex flex-col w-full overflow-hidden">
+            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white p-2">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="font-bold text-white text-lg md:text-xl">Inscrições</h2>
+                </div>
+                
+                <div class="flex gap-2 items-center">
+                    <div class="relative">
+                        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Buscar..." class="bg-slate-800 border-none text-white text-sm rounded-full pl-4 pr-10 py-2 w-32 md:w-64 focus:ring-1 focus:ring-primary outline-none transition-all focus:w-40 md:focus:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-slate-500 text-xs"></i>
+                    </div>
+                    <button onclick="loadData()" class="bg-primary text-slate-900 w-9 h-9 rounded-full hover:bg-yellow-600 transition flex items-center justify-center shadow-lg" title="Atualizar">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
                 </div>
             </header>
 
-            <div class="flex-1 overflow-auto p-6">
-                <div class="glass-panel overflow-hidden">
-                    <table class="w-full text-left text-sm text-slate-400">
-                        <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-300">
-                            <tr>
-                                <th class="p-4">Data</th>
-                                <th class="p-4">Participante</th>
-                                <th class="p-4 hidden md:table-cell">Congregação</th>
-                                <th class="p-4 text-center">Qtd</th> <th class="p-4 hidden md:table-cell">Modo</th>
-                                <th class="p-4">Valor</th>
-                                <th class="p-4 text-center">Status</th>
-                                <th class="p-4 text-right">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-700">
-                            </tbody>
-                    </table>
+            <div class="flex-1 overflow-hidden p-2 md:p-6 flex flex-col">
+                <div class="glass-panel flex-1 flex flex-col overflow-hidden shadow-xl">
+                    <div class="overflow-auto flex-1">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-300 sticky top-0 z-10 shadow-md">
+                                <tr>
+                                    <th class="p-4 mobile-hide">Data</th>
+                                    <th class="p-4">Participante</th>
+                                    <th class="p-4 hidden md:table-cell">Congregação</th>
+                                    <th class="p-4 text-center">Qtd</th> 
+                                    <th class="p-4 hidden md:table-cell">Modo</th>
+                                    <th class="p-4 hidden md:table-cell">Valor</th>
+                                    <th class="p-4 text-center">Status</th>
+                                    <th class="p-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="divide-y divide-slate-700/50">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div class="p-2 bg-slate-800 text-xs text-center text-slate-500 md:hidden border-t border-slate-700">
+                        Role para o lado para ver mais detalhes <i class="fa-solid fa-arrows-left-right ml-1"></i>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="actionModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
-        <div class="modal-overlay absolute w-full h-full bg-black/80 backdrop-blur-sm"></div>
+    <div id="actionModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-50 px-4 py-6">
+        <div class="modal-overlay absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
         
-        <div class="modal-container bg-slate-800 w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto border border-slate-700 max-h-[90vh]">
+        <div class="modal-container bg-slate-800 w-full max-w-md mx-auto rounded-xl shadow-2xl z-50 flex flex-col border border-slate-700 max-h-full overflow-hidden animate-fade-in-up">
             
-            <div class="modal-content py-4 text-left px-6">
-                <div class="flex justify-between items-center pb-3 border-b border-slate-700">
-                    <p class="text-xl font-bold text-white">Gerenciar Pedido</p>
-                    <div class="modal-close cursor-pointer z-50 text-slate-400 hover:text-white" onclick="closeModal()">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </div>
-                </div>
+            <div class="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-800/50 shrink-0">
+                <p class="text-lg font-bold text-white">Gerenciar Pedido</p>
+                <button class="text-slate-400 hover:text-white p-2" onclick="closeModal()">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
 
-                <form id="updateForm" onsubmit="updateOrder(event)" class="my-5">
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <form id="updateForm" onsubmit="updateOrder(event)">
                     <input type="hidden" id="modalRowIndex">
                     <input type="hidden" id="modalCurrentCpf"> 
                     
-                    <div class="mb-4">
+                    <div class="mb-5">
                         <p class="text-xs text-slate-500 uppercase font-bold mb-1">Participante</p>
-                        <p id="modalName" class="text-white font-medium text-lg leading-tight">Nome aqui</p>
-                        <p id="modalCpf" class="text-sm text-slate-400 mt-1">CPF: 000.000.000-00</p>
-                        <p id="modalModality" class="text-xs text-primary mt-1 font-mono">Modalidade: Integral</p>
-                        <p id="modalQtd" class="text-xs text-slate-300 mt-1 font-bold">Qtd Pulseiras: 1</p> </div>
-
-                    <div class="mb-4 bg-slate-900 p-3 rounded border border-slate-700">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Status Financeiro</label>
-                        <select id="modalStatus" class="w-full bg-slate-800 border border-slate-600 text-white rounded p-2 focus:border-primary outline-none">
-                            <option value="Pendente">Pendente</option>
-                            <option value="Pago">Pago (Confirmado)</option>
-                            <option value="Aguardando">Aguardando (Futuro)</option>
-                            <option value="Cancelado">Cancelado</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">
-                            <i class="fa-solid fa-paperclip mr-1"></i> Comprovante
-                        </label>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 border border-dashed border-slate-600 rounded p-2 text-center relative hover:border-primary transition cursor-pointer">
-                                <input type="file" id="modalFile" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFile()">
-                                <span id="fileLabel" class="text-xs text-slate-400">Anexar Novo</span>
-                                <span id="fileName" class="text-xs text-primary font-bold hidden truncate"></span>
+                        <p id="modalName" class="text-white font-semibold text-xl leading-tight">Nome do Cliente</p>
+                        <div class="flex justify-between items-end mt-1">
+                            <div>
+                                <p id="modalCpf" class="text-sm text-slate-400">CPF: ...</p>
+                                <p id="modalModality" class="text-xs text-primary font-mono mt-0.5">Modo: ...</p>
                             </div>
-                            <div id="currentProofLink" class="flex-none"></div>
+                            <span id="modalQtdBadge" class="bg-slate-700 text-white text-xs font-bold px-2 py-1 rounded">1x</span>
                         </div>
                     </div>
 
-                    <div id="historySection" class="hidden mb-4 border-t border-slate-700 pt-4">
-                        <p class="text-xs text-slate-400 uppercase font-bold mb-2"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Outros registros deste CPF</p>
-                        <div id="historyList" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                    <div class="mb-5 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Status Financeiro</label>
+                        <div class="relative">
+                            <select id="modalStatus" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg p-3 appearance-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition">
+                                <option value="Pendente">Pendente</option>
+                                <option value="Pago">Pago (Confirmado)</option>
+                                <option value="Aguardando">Aguardando (Futuro)</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-2">
+                            <i class="fa-solid fa-paperclip mr-1"></i> Comprovante
+                        </label>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex-1 border-2 border-dashed border-slate-600 hover:border-primary hover:bg-slate-700/30 transition rounded-lg p-4 text-center cursor-pointer group">
+                                <input type="file" id="modalFile" accept="image/*,application/pdf" class="hidden" onchange="previewFile()">
+                                <div id="fileLabel" class="flex flex-col items-center gap-1">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-500 group-hover:text-primary transition"></i>
+                                    <span class="text-xs text-slate-400">Toque para anexar</span>
+                                </div>
+                                <span id="fileName" class="text-sm text-primary font-medium hidden break-all"></span>
+                            </label>
+                            
+                            <div id="currentProofLink" class="flex justify-end"></div>
+                        </div>
+                    </div>
+
+                    <div id="historySection" class="hidden mb-5 border-t border-slate-700 pt-4">
+                        <p class="text-xs text-slate-400 uppercase font-bold mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Histórico (Mesmo CPF)
+                        </p>
+                        <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
                             </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Observações Internas</label>
-                        <textarea id="modalObs" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white focus:border-primary outline-none" placeholder="Anotações..."></textarea>
-                    </div>
-
-                    <div class="flex justify-end pt-2 border-t border-slate-700 mt-4">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white text-sm mr-2">Cancelar</button>
-                        <button type="submit" id="btnSave" class="px-6 py-2 bg-primary text-slate-900 font-bold rounded-lg hover:bg-yellow-500 shadow-lg text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-check"></i> Salvar
-                        </button>
+                    <div class="mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Observações Internas</label>
+                        <textarea id="modalObs" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:border-primary outline-none resize-none" placeholder="Escreva aqui..."></textarea>
                     </div>
                 </form>
+            </div>
+
+            <div class="p-4 border-t border-slate-700 bg-slate-800/50 shrink-0 flex gap-3 justify-end">
+                <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-slate-400 hover:text-white text-sm font-medium transition">Cancelar</button>
+                <button type="submit" form="updateForm" id="btnSave" class="px-6 py-2.5 bg-primary text-slate-900 font-bold rounded-lg hover:bg-yellow-500 shadow-lg shadow-yellow-500/10 text-sm flex items-center gap-2 transition transform active:scale-95">
+                    <i class="fa-solid fa-check"></i> Salvar
+                </button>
             </div>
         </div>
     </div>
 
     <script>
         // =============================================================
-        // CONFIGURE AQUI A URL DO SEU SCRIPT
+        // CONFIGURAÇÕES
         // =============================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbwk4myV5ohip_S2cDXGouTrmE00OdlKeBR3FEa_j2R66JRVMz6wM-DM98hmIA4sUJ_-1Q/exec"; 
-        // =============================================================
-
+        
         let dbData = [];
+
+        // UI Helpers
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileMenuOverlay');
+
+        function toggleMobileMenu() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
 
         window.onload = function() {
             if(sessionStorage.getItem('ebdAdminToken')) {
@@ -185,7 +244,7 @@
             }
         };
 
-        // --- FETCH COM TRATAMENTO DE ERRO JSON ---
+        // --- FETCH ---
         async function fetchGAS(payload) {
             const response = await fetch(API_URL, {
                 method: "POST",
@@ -221,7 +280,7 @@
             })
             .catch(error => {
                 console.error(error);
-                err.innerText = "Erro de conexão. Verifique se o Script foi implantado como 'Nova Versão'.";
+                err.innerText = "Erro de conexão.";
                 err.classList.remove('hidden');
                 btn.innerText = "ENTRAR";
                 btn.disabled = false;
@@ -239,10 +298,10 @@
             location.reload();
         }
 
-        // --- LOAD DATA ---
+        // --- DATA ---
         function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Atualizando lista...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando...</td></tr>';
 
             fetchGAS({ action: 'getData' })
             .then(res => {
@@ -251,7 +310,7 @@
                     renderTable(dbData);
                     updateCounters();
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-400">Erro ao carregar dados do servidor.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-400">Erro ao carregar dados.</td></tr>';
                 }
             })
             .catch(err => {
@@ -265,7 +324,7 @@
             tbody.innerHTML = '';
 
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">Nenhum registro.</td></tr>';
                 return;
             }
 
@@ -274,39 +333,40 @@
                 if(row.status === 'Pago') statusClass = 'status-pago';
                 if(row.status === 'Aguardando') statusClass = 'status-aguardando';
 
-                // Formatação
                 const valor = parseFloat(row.valor) || 0;
                 const money = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 
                 let dateDisplay = row.data;
                 try {
-                     if(row.data.includes('T')) dateDisplay = new Date(row.data).toLocaleDateString('pt-BR');
+                     if(row.data.includes('T')) dateDisplay = new Date(row.data).toLocaleDateString('pt-BR').substring(0,5); // Dia/Mês
                 } catch(e){}
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800 transition border-b border-slate-800/50";
+                tr.className = "hover:bg-slate-800 transition border-b border-slate-700/50 group";
                 tr.innerHTML = `
-                    <td class="p-4 text-xs text-slate-500">${dateDisplay}</td>
+                    <td class="p-4 text-xs text-slate-500 mobile-hide whitespace-nowrap">${dateDisplay}</td>
                     <td class="p-4">
-                        <div class="font-bold text-white">${row.nome}</div>
+                        <div class="font-bold text-white text-sm md:text-base">${row.nome}</div>
                         <div class="text-xs text-slate-500">${row.cpf}</div>
+                        <div class="md:hidden text-[10px] text-slate-600 mt-1">${row.congregacao}</div>
                     </td>
                     <td class="p-4 hidden md:table-cell text-xs text-slate-400">${row.congregacao}</td>
-                    <td class="p-4 text-center font-bold text-white">${row.qtd}</td> <td class="p-4 hidden md:table-cell text-xs text-slate-400 font-mono">${row.modalidade}</td>
-                    <td class="p-4 text-primary font-mono text-sm">${money}</td>
-                    <td class="p-4 text-center"><span class="status-badge ${statusClass}">${row.status}</span></td>
-                    <td class="p-4 text-right">
-                        <button onclick='openModal(${JSON.stringify(row).replace(/'/g, "&apos;")})' class="bg-slate-700 hover:bg-slate-600 text-white w-8 h-8 rounded-full transition shadow" title="Editar">
-                            <i class="fa-solid fa-pen"></i>
+                    <td class="p-4 text-center font-bold text-white text-sm">${row.qtd}</td> 
+                    <td class="p-4 hidden md:table-cell text-xs text-slate-400 font-mono">${row.modalidade}</td>
+                    <td class="p-4 hidden md:table-cell text-primary font-mono text-sm whitespace-nowrap">${money}</td>
+                    <td class="p-4 text-center"><span class="status-badge ${statusClass} text-[10px] md:text-xs">${row.status}</span></td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        <button onclick='openModal(${JSON.stringify(row).replace(/'/g, "&apos;")})' class="bg-slate-700 hover:bg-slate-600 text-white w-8 h-8 rounded-lg transition shadow flex items-center justify-center inline-block" title="Editar">
+                            <i class="fa-solid fa-pen text-xs"></i>
                         </button>
-                        ${row.whatsapp ? `<a href="https://wa.me/${row.whatsapp.replace(/\D/g,'')}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white w-8 h-8 rounded-full ml-1 transition inline-flex items-center justify-center"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                        ${row.whatsapp ? `<a href="https://wa.me/${row.whatsapp.replace(/\D/g,'')}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white w-8 h-8 rounded-lg ml-2 transition inline-flex items-center justify-center shadow"><i class="fa-brands fa-whatsapp text-sm"></i></a>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- FILTROS & BUSCA ---
+        // --- UTILS ---
         function filterStatus(status) {
             if(status === 'all') renderTable(dbData);
             else renderTable(dbData.filter(d => d.status === status));
@@ -333,7 +393,7 @@
             document.getElementById('modalName').innerText = row.nome;
             document.getElementById('modalCpf').innerText = "CPF: " + row.cpf;
             document.getElementById('modalModality').innerText = "Ref: " + row.modalidade;
-            document.getElementById('modalQtd').innerText = "Qtd Pulseiras: " + row.qtd; // Atualiza Modal TBM
+            document.getElementById('modalQtdBadge').innerText = row.qtd + "x";
             document.getElementById('modalStatus').value = row.status;
             document.getElementById('modalObs').value = row.obs || "";
             document.getElementById('modalCurrentCpf').value = row.cpf;
@@ -341,9 +401,9 @@
             // Link Comprovante
             const proofDiv = document.getElementById('currentProofLink');
             if(row.comprovante && row.comprovante.startsWith('http')) {
-                proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="bg-slate-700 text-white text-xs px-3 py-2 rounded hover:bg-slate-600"><i class="fa-solid fa-eye"></i> Ver</a>`;
+                proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="text-primary hover:text-yellow-400 text-xs flex items-center gap-1 bg-slate-900 px-3 py-2 rounded-lg border border-slate-700"><i class="fa-solid fa-eye"></i> Ver comprovante atual</a>`;
             } else {
-                proofDiv.innerHTML = '';
+                proofDiv.innerHTML = '<span class="text-xs text-slate-600 italic">Nenhum comprovante</span>';
             }
 
             // Reset File Input
@@ -351,7 +411,7 @@
             document.getElementById('fileLabel').classList.remove('hidden');
             document.getElementById('fileName').classList.add('hidden');
 
-            // --- LÓGICA HISTÓRICO ---
+            // Histórico
             const historySection = document.getElementById('historySection');
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
@@ -363,15 +423,16 @@
                 related.forEach(r => {
                     const rMoney = parseFloat(r.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                     const div = document.createElement('div');
-                    div.className = "flex justify-between items-center bg-slate-900 p-2 rounded text-xs border border-slate-700";
+                    div.className = "flex justify-between items-center bg-slate-900 p-3 rounded-lg text-xs border border-slate-700/50 hover:border-slate-600 transition cursor-pointer";
+                    div.onclick = () => { closeModal(); setTimeout(()=>openModal(dbData.find(d=>d.rowIndex==r.rowIndex)), 200) };
                     div.innerHTML = `
                         <div>
-                            <span class="text-white font-bold block">${r.modalidade} (Qtd: ${r.qtd})</span>
-                            <span class="text-slate-500">${r.status}</span>
+                            <span class="text-white font-bold block mb-0.5">${r.modalidade} <span class="text-slate-500 font-normal">(${r.qtd}x)</span></span>
+                            <span class="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">${r.status}</span>
                         </div>
                         <div class="text-right">
-                            <span class="text-primary block">${rMoney}</span>
-                            <button type="button" onclick="closeModal(); setTimeout(()=>openModal(dbData.find(d=>d.rowIndex==${r.rowIndex})), 200)" class="text-slate-400 hover:text-white underline text-[10px]">Gerenciar este</button>
+                            <span class="text-primary font-mono block mb-1">${rMoney}</span>
+                            <span class="text-slate-500 text-[10px] underline decoration-dotted">Ver</span>
                         </div>
                     `;
                     historyList.appendChild(div);
@@ -401,11 +462,12 @@
             }
         }
 
-        // --- SALVAR (UPDATE) ---
+        // --- SALVAR ---
         function updateOrder(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSave');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...';
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
             btn.disabled = true;
 
             const rowIndex = document.getElementById('modalRowIndex').value;
@@ -427,21 +489,22 @@
                     payload.fileData = base64;
                     payload.fileName = file.name;
                     payload.fileType = file.type;
-                    sendUpdate(payload, btn);
+                    sendUpdate(payload, btn, originalContent);
                 };
                 reader.readAsDataURL(file);
             } else {
-                sendUpdate(payload, btn);
+                sendUpdate(payload, btn, originalContent);
             }
         }
 
-        function sendUpdate(payload, btn) {
+        function sendUpdate(payload, btn, originalContent) {
             fetchGAS(payload)
             .then(res => {
                 if(res.status === 'success') {
                     closeModal();
                     loadData();
-                    alert('Pedido atualizado com sucesso!');
+                    // Pequeno toast de sucesso (opcional, aqui uso alert simples)
+                    // alert('Sucesso!'); 
                 } else {
                     alert('Erro: ' + res.message);
                 }
@@ -451,7 +514,7 @@
                 alert('Erro de conexão.');
             })
             .finally(() => {
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
+                btn.innerHTML = originalContent;
                 btn.disabled = false;
             });
         }
