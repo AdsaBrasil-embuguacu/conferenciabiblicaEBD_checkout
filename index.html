@@ -236,23 +236,54 @@
             text-align: left;
         }
 
-        /* --- MODAL DE FEEDBACK --- */
+        .btn-copy-key {
+            background: transparent;
+            border: 1px solid #444;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn-copy-key:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* --- MODAL DE FEEDBACK MELHORADO --- */
         .copy-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
             display: flex; justify-content: center; align-items: center;
             z-index: 9999;
             opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         .copy-modal-overlay.show { opacity: 1; pointer-events: all; }
+        
         .copy-modal-content {
-            background: #1e1e1e; padding: 40px; border-radius: 20px;
-            text-align: center; border: 1px solid var(--gold);
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.25);
-            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 300px;
+            background: linear-gradient(135deg, #1e1e1e, #252525);
+            padding: 30px 50px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90%;
         }
-        .copy-modal-overlay.show .copy-modal-content { transform: scale(1); }
+        .copy-modal-overlay.show .copy-modal-content { transform: translateY(0) scale(1); }
+        
+        .check-circle {
+            width: 70px; height: 70px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+        }
         
         .check-anim { animation: popCheck 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popCheck { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -372,7 +403,6 @@
         // =========================================================
         // CONFIGURAÇÕES DO EVENTO
         // =========================================================
-        // Use a chave PIX real (CPF, E-mail, Celular ou Aleatória)
         const CONST_PIX_KEY = "31504700805"; // EX: SEU CPF OU EMAIL
         const CONST_PIX_NAME = "ROSEMEIREEBD";
         const CONST_PIX_CITY = "SAO PAULO"; 
@@ -385,6 +415,18 @@
         const CONGREGACOES = [
             "CHACARA FLORIDA", "CIPÓ", "KM 37", "JUQUITIBA", "VILA GUIOMAR"
         ];
+
+        // Componente auxiliar para chave simples
+        const KeyDisplay = ({ onCopy }) => (
+            <div className="d-flex flex-column align-items-center mt-3 mb-2 pt-2 border-top border-secondary w-100">
+                <span className="text-muted small mb-1" style={{fontSize: '0.75rem'}}>Prefere digitar a chave?</span>
+                <button className="btn-copy-key d-flex align-items-center gap-2" onClick={onCopy} title="Copiar CPF">
+                    <i className="fa-regular fa-id-card"></i> 
+                    Chave CPF: {CONST_PIX_KEY}
+                    <i className="fa-regular fa-copy"></i>
+                </button>
+            </div>
+        );
 
         function App() {
             const [step, setStep] = useState(1);
@@ -401,8 +443,10 @@
             const [parcelamentoDisponivel, setParcelamentoDisponivel] = useState(true);
             const [generatedPayloads, setGeneratedPayloads] = useState({});
             
-            // Estado para o Modal de Cópia
+            // Estado para o Modal de Cópia e Loading
             const [showCopyModal, setShowCopyModal] = useState(false);
+            const [modalText, setModalText] = useState("Copiado com sucesso!");
+            const [isSubmitting, setIsSubmitting] = useState(false);
 
             // Verifica data limite
             useEffect(() => {
@@ -412,30 +456,41 @@
                 }
             }, []);
 
-            // Calcula total e gera payloads dinâmicos
+            // Calcula total e gera payloads dinâmicos (SEM DUPLICIDADE)
             useEffect(() => {
                 const basePrice = formData.modalidade === 'integral' ? VALOR_TOTAL : VALOR_PARCELA;
                 const valorAtual = basePrice * formData.quantidade;
                 setTotal(valorAtual);
 
-                // Gerar Payloads PIX
-                // TxID é um identificador único. Usamos Date.now() para simular
-                const txidBase = "EBD" + Date.now().toString().slice(-10); 
+                const txidBase = "EBD" + Date.now().toString().slice(-10);
                 
-                // Payload Integral
-                const pixIntegral = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_TOTAL * formData.quantidade, txidBase + "INT").getPayload();
-                
-                // Payload Parcela 1
-                const pixP1 = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_PARCELA * formData.quantidade, txidBase + "P1").getPayload();
-                
-                // Payload Parcela 2 (Mesmo valor, mas identificador diferente)
-                const pixP2 = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_PARCELA * formData.quantidade, txidBase + "P2").getPayload();
+                const newPayloads = {};
 
-                setGeneratedPayloads({
-                    integral: pixIntegral,
-                    p1: pixP1,
-                    p2: pixP2
-                });
+                // Lógica OTIMIZADA: Gera apenas o necessário
+                if (formData.modalidade === 'integral') {
+                    const pixIntegral = new PixPayload(
+                        CONST_PIX_KEY, 
+                        CONST_PIX_NAME, 
+                        CONST_PIX_CITY, 
+                        VALOR_TOTAL * formData.quantidade, 
+                        txidBase + "INT"
+                    ).getPayload();
+                    newPayloads.integral = pixIntegral;
+                } else {
+                    // PARCELADO: GERA APENAS A ENTRADA (P1)
+                    const pixP1 = new PixPayload(
+                        CONST_PIX_KEY, 
+                        CONST_PIX_NAME, 
+                        CONST_PIX_CITY, 
+                        VALOR_PARCELA * formData.quantidade, 
+                        txidBase + "P1"
+                    ).getPayload();
+                    
+                    newPayloads.p1 = pixP1;
+                    // p2 não é gerado aqui, pois será cobrado por e-mail
+                }
+
+                setGeneratedPayloads(newPayloads);
 
             }, [formData.quantidade, formData.modalidade]);
 
@@ -447,26 +502,55 @@
             const goNext = () => setStep(prev => prev + 1);
             const goBack = () => setStep(prev => prev - 1);
 
-            const copyToClipboard = (text) => {
+            const copyToClipboard = (text, isKey = false) => {
                 navigator.clipboard.writeText(text).then(() => {
-                    // Exibe o modal
+                    setModalText(isKey ? "Chave CPF copiada!" : "Código 'Copia e Cola' copiado!");
                     setShowCopyModal(true);
-                    // Oculta após 2.5 segundos
-                    setTimeout(() => setShowCopyModal(false), 2500);
+                    setTimeout(() => setShowCopyModal(false), 2000);
                 });
             };
 
-            const finalizarPedido = () => {
-                // TODO: Integração com Google Apps Script (code.gs)
-                // Aqui você faria um POST para o seu Web App do Google Apps Script
-                // para salvar a planilha e enviar os e-mails de cobrança/confirmação.
-                // Exemplo:
-                // fetch('URL_DO_SEU_WEB_APP', { method: 'POST', body: JSON.stringify(formData) })
+            // =============================================================
+            // FUNÇÃO ATUALIZADA COM SUA API E LÓGICA DE SALVAMENTO
+            // =============================================================
+            const finalizarPedido = async () => {
+                if (isSubmitting) return; // Evita duplo clique
+                setIsSubmitting(true);
+
+                // URL fornecida pelo usuário
+                const API_URL = "https://script.google.com/macros/s/AKfycbwk4myV5ohip_S2cDXGouTrmE00OdlKeBR3FEa_j2R66JRVMz6wM-DM98hmIA4sUJ_-1Q/exec";
                 
                 const tipoPgto = formData.modalidade === 'integral' 
                     ? 'À Vista (Integral)' 
-                    : 'Parcelado (2x)';
+                    : 'Parcelado (Entrada + 1x)';
+                
+                // Calcula o valor TOTAL do pedido (para registro) e não apenas o pago agora
+                const valorTotalPedido = formData.modalidade === 'integral' ? total : total * 2;
 
+                const orderData = {
+                    ...formData,
+                    total: valorTotalPedido,
+                    tipoPgto: tipoPgto
+                };
+
+                // Envia para a planilha do Google Apps Script
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Importante para enviar dados sem erro de CORS (fire-and-forget)
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'createOrder',
+                            data: orderData
+                        })
+                    });
+                } catch (error) {
+                    console.error("Erro ao salvar pedido na planilha (prosseguindo para WhatsApp):", error);
+                }
+
+                // Monta mensagem do WhatsApp
                 const msg = `*COMPROVANTE PULSEIRA EBD 2026*%0A` +
                             `--------------------------------%0A` +
                             `👤 *Nome:* ${formData.nome}%0A` +
@@ -477,25 +561,29 @@
                             `--------------------------------%0A` +
                             `🎟 *Qtd:* ${formData.quantidade}%0A` +
                             `💲 *Modalidade:* ${tipoPgto}%0A` +
-                            `💰 *Valor Total:* R$ ${(formData.modalidade === 'integral' ? total : total * 2).toFixed(2).replace('.',',')}%0A` +
+                            `💰 *Pago Agora:* R$ ${(formData.modalidade === 'integral' ? total : total).toFixed(2).replace('.',',')}%0A` +
+                            (formData.modalidade === 'parcelado' ? `📅 *Restante:* Boleto p/ 06/03 no e-mail%0A` : ``) +
                             `--------------------------------%0A` +
                             `Segue anexo o comprovante.`;
                 
+                // Redireciona
                 window.location.href = `https://wa.me/${CONST_WHATSAPP}?text=${msg}`;
             };
 
             return (
                 <div className="checkout-modal fade-in">
                     
-                    {/* MODAL DE FEEDBACK DE CÓPIA */}
+                    {/* MODAL DE FEEDBACK MELHORADO */}
                     <div className={`copy-modal-overlay ${showCopyModal ? 'show' : ''}`}>
                         <div className="copy-modal-content">
                             {showCopyModal && (
                                 <>
-                                    <i className="fa-regular fa-circle-check fa-4x text-gold mb-3 check-anim"></i>
-                                    <h3 className="h5 text-white fade-in">Copiado!</h3>
+                                    <div className="check-circle check-anim">
+                                        <i className="fa-solid fa-check fa-2x text-gold"></i>
+                                    </div>
+                                    <h3 className="h5 text-white fade-in mb-1">Pronto!</h3>
                                     <p className="text-muted small mb-0 fade-in">
-                                        Código "Copia e Cola" pronto para uso no app do banco.
+                                        {modalText}
                                     </p>
                                 </>
                             )}
@@ -653,7 +741,7 @@
                                 <div style={{overflowY: 'auto', maxHeight: '350px'}}>
                                     
                                     {/* CASO 1: INTEGRAL */}
-                                    {formData.modalidade === 'integral' && (
+                                    {formData.modalidade === 'integral' && generatedPayloads.integral && (
                                         <div className="mb-4">
                                             <div className="qr-title">Pagamento Único (R$ {total.toFixed(2).replace('.',',')})</div>
                                             <div className="qr-box">
@@ -665,14 +753,17 @@
                                                     <i className="fa-regular fa-copy"></i>
                                                 </button>
                                             </div>
+                                            
+                                            <KeyDisplay onCopy={() => copyToClipboard(CONST_PIX_KEY, true)} />
+                                            
                                             <small className="text-gold mt-2 d-block">Válido por 24 horas</small>
                                         </div>
                                     )}
 
-                                    {/* CASO 2: PARCELADO */}
-                                    {formData.modalidade === 'parcelado' && (
+                                    {/* CASO 2: PARCELADO (APENAS ENTRADA) */}
+                                    {formData.modalidade === 'parcelado' && generatedPayloads.p1 && (
                                         <>
-                                            <div className="mb-4 pb-4 border-bottom border-secondary">
+                                            <div className="mb-4">
                                                 <div className="qr-title text-white">1ª Parcela - Entrada (R$ {total.toFixed(2).replace('.',',')})</div>
                                                 <div className="qr-box">
                                                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedPayloads.p1)}`} alt="QR Code 1" />
@@ -683,21 +774,22 @@
                                                         <i className="fa-regular fa-copy"></i>
                                                     </button>
                                                 </div>
+                                                
+                                                <KeyDisplay onCopy={() => copyToClipboard(CONST_PIX_KEY, true)} />
+
                                                 <small className="text-gold mt-1 d-block">Pagar Agora</small>
                                             </div>
 
-                                            <div className="mb-4">
-                                                <div className="qr-title text-muted">2ª Parcela - Vencimento em 30 dias</div>
-                                                <div className="qr-box opacity-75">
-                                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedPayloads.p2)}`} alt="QR Code 2" />
+                                            <div className="alert alert-dark border-secondary text-start mb-4">
+                                                <div className="d-flex gap-2">
+                                                    <i className="fa-regular fa-envelope text-gold mt-1"></i>
+                                                    <div>
+                                                        <strong className="text-gold d-block">2ª Parcela</strong>
+                                                        <small className="text-muted">
+                                                            O valor restante será enviado para seu e-mail <strong>{formData.email}</strong> com vencimento para <strong>06/03/2026</strong>.
+                                                        </small>
+                                                    </div>
                                                 </div>
-                                                <div className="d-flex align-items-center gap-2 opacity-75">
-                                                    <div className="pix-string w-100">{generatedPayloads.p2}</div>
-                                                    <button className="btn btn-outline-secondary py-1 px-3" onClick={() => copyToClipboard(generatedPayloads.p2)}>
-                                                        <i className="fa-regular fa-copy"></i>
-                                                    </button>
-                                                </div>
-                                                <small className="text-muted d-block mt-1">Salve este código para o próximo mês</small>
                                             </div>
                                         </>
                                     )}
@@ -710,8 +802,12 @@
 
                                 <div className="d-flex gap-2 mt-auto">
                                     <button className="btn btn-outline-secondary w-50" onClick={goBack}>Corrigir</button>
-                                    <button className="btn-confirm w-50 m-0" onClick={finalizarPedido}>
-                                        <i className="fa-brands fa-whatsapp me-2"></i> Enviar Comp.
+                                    <button className="btn-confirm w-50 m-0" onClick={finalizarPedido} disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <span><i className="fa-solid fa-spinner fa-spin me-2"></i> Enviando...</span>
+                                        ) : (
+                                            <span><i className="fa-brands fa-whatsapp me-2"></i> Enviar Comp.</span>
+                                        )}
                                     </button>
                                 </div>
                             </div>
