@@ -22,15 +22,14 @@
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .status-pago { background-color: #dcfce7; color: #166534; }
         .status-pendente { background-color: #fee2e2; color: #991b1b; }
+        .status-aguardando { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         
-        /* Modal Transitions */
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- TELA DE LOGIN -->
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 px-4">
         <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700">
             <div class="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -47,18 +46,16 @@
         </div>
     </div>
 
-    <!-- APP CONTAINER -->
     <div id="appContainer" class="flex h-full hidden">
         
-        <!-- SIDEBAR -->
         <aside class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col">
             <div class="p-6 border-b border-slate-800">
                 <h2 class="font-bold text-xl text-primary"><i class="fa-solid fa-ticket mr-2"></i>EBD 2026</h2>
                 <p class="text-xs text-slate-500">Gestão de Pulseiras</p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
-                <button onclick="filterStatus('all')" class="w-full text-left px-4 py-3 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-700 flex justify-between">
-                    <span>Todos</span> <span id="countAll" class="bg-slate-900 px-2 rounded text-xs py-1">0</span>
+                <button onclick="filterStatus('all')" class="w-full text-left px-4 py-3 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-700 flex justify-between group">
+                    <span>Todos</span> <span id="countAll" class="bg-slate-900 px-2 rounded text-xs py-1 group-hover:bg-black">0</span>
                 </button>
                 <button onclick="filterStatus('Pendente')" class="w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between">
                     <span>Pendentes</span> <span id="countPending" class="bg-red-900/50 text-red-200 px-2 rounded text-xs py-1">0</span>
@@ -72,7 +69,6 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="flex-1 flex flex-col relative">
             <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6">
                 <h2 class="font-bold text-white">Inscrições</h2>
@@ -90,30 +86,28 @@
                                 <th class="p-4">Data</th>
                                 <th class="p-4">Participante</th>
                                 <th class="p-4 hidden md:table-cell">Congregação</th>
-                                <th class="p-4 text-center">Pulseiras</th>
+                                <th class="p-4 hidden md:table-cell">Modo</th>
                                 <th class="p-4">Valor</th>
                                 <th class="p-4 text-center">Status</th>
                                 <th class="p-4 text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-700">
-                            <!-- JS PREENCHE AQUI -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODAL DE EDIÇÃO / UPLOAD -->
     <div id="actionModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-black/80 backdrop-blur-sm"></div>
         
-        <div class="modal-container bg-slate-800 w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto border border-slate-700">
+        <div class="modal-container bg-slate-800 w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto border border-slate-700 max-h-[90vh]">
             
             <div class="modal-content py-4 text-left px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-slate-700">
-                    <p class="text-xl font-bold text-white">Gerenciar Pagamento</p>
+                    <p class="text-xl font-bold text-white">Gerenciar Pedido</p>
                     <div class="modal-close cursor-pointer z-50 text-slate-400 hover:text-white" onclick="closeModal()">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </div>
@@ -121,38 +115,50 @@
 
                 <form id="updateForm" onsubmit="updateOrder(event)" class="my-5">
                     <input type="hidden" id="modalRowIndex">
-                    
-                    <div class="mb-4">
+                    <input type="hidden" id="modalCurrentCpf"> <div class="mb-4">
                         <p class="text-xs text-slate-500 uppercase font-bold mb-1">Participante</p>
-                        <p id="modalName" class="text-white font-medium text-lg">Nome aqui</p>
-                        <p id="modalCpf" class="text-sm text-slate-400">CPF: 000.000.000-00</p>
+                        <p id="modalName" class="text-white font-medium text-lg leading-tight">Nome aqui</p>
+                        <p id="modalCpf" class="text-sm text-slate-400 mt-1">CPF: 000.000.000-00</p>
+                        <p id="modalModality" class="text-xs text-primary mt-1 font-mono">Modalidade: Integral</p>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Status do Pagamento</label>
-                        <select id="modalStatus" class="w-full bg-slate-900 border border-slate-600 text-white rounded p-2 focus:border-primary outline-none">
+                    <div class="mb-4 bg-slate-900 p-3 rounded border border-slate-700">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Status Financeiro</label>
+                        <select id="modalStatus" class="w-full bg-slate-800 border border-slate-600 text-white rounded p-2 focus:border-primary outline-none">
                             <option value="Pendente">Pendente</option>
                             <option value="Pago">Pago (Confirmado)</option>
+                            <option value="Aguardando">Aguardando (Futuro)</option>
+                            <option value="Cancelado">Cancelado</option>
                         </select>
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-2">
-                            <i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Anexar Comprovante
+                            <i class="fa-solid fa-paperclip mr-1"></i> Comprovante
                         </label>
-                        <div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center hover:border-primary transition relative">
-                            <input type="file" id="modalFile" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFile()">
-                            <div id="fileLabel">
-                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-2"></i>
-                                <p class="text-xs text-slate-400">Clique para selecionar imagem/PDF</p>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 border border-dashed border-slate-600 rounded p-2 text-center relative hover:border-primary transition cursor-pointer">
+                                <input type="file" id="modalFile" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFile()">
+                                <span id="fileLabel" class="text-xs text-slate-400">Anexar Novo</span>
+                                <span id="fileName" class="text-xs text-primary font-bold hidden truncate"></span>
                             </div>
-                            <p id="fileName" class="text-xs text-primary font-bold mt-2 hidden"></p>
+                            <div id="currentProofLink" class="flex-none"></div>
                         </div>
-                        <div id="currentProofLink" class="mt-2 text-xs text-right"></div>
                     </div>
 
-                    <div class="flex justify-end pt-2">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-transparent p-3 rounded-lg text-slate-400 hover:bg-slate-700 hover:text-white mr-2 text-sm">Cancelar</button>
+                    <div id="historySection" class="hidden mb-4 border-t border-slate-700 pt-4">
+                        <p class="text-xs text-slate-400 uppercase font-bold mb-2"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Outros registros deste CPF</p>
+                        <div id="historyList" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                            </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Observações Internas</label>
+                        <textarea id="modalObs" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white focus:border-primary outline-none" placeholder="Anotações..."></textarea>
+                    </div>
+
+                    <div class="flex justify-end pt-2 border-t border-slate-700 mt-4">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white text-sm mr-2">Cancelar</button>
                         <button type="submit" id="btnSave" class="px-6 py-2 bg-primary text-slate-900 font-bold rounded-lg hover:bg-yellow-500 shadow-lg text-sm flex items-center gap-2">
                             <i class="fa-solid fa-check"></i> Salvar
                         </button>
@@ -164,28 +170,26 @@
 
     <script>
         // =============================================================
-        // IMPORTANTE: COLOQUE AQUI A URL DO SEU WEB APP GOOGLE (DEPLOY)
+        // CONFIGURE AQUI A URL DO SEU SCRIPT
         // =============================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbwk4myV5ohip_S2cDXGouTrmE00OdlKeBR3FEa_j2R66JRVMz6wM-DM98hmIA4sUJ_-1Q/exec"; 
         // =============================================================
 
         let dbData = [];
 
-        // Verifica se já está logado
         window.onload = function() {
             if(sessionStorage.getItem('ebdAdminToken')) {
                 showApp();
             }
         };
 
-        // --- FUNÇÃO FETCH HELPER (O SEGREDO PARA EVITAR CORS) ---
+        // --- FETCH COM TRATAMENTO DE ERRO JSON ---
         async function fetchGAS(payload) {
+            // Importante: text/plain evita Preflight (OPTIONS)
             const response = await fetch(API_URL, {
                 method: "POST",
-                redirect: "follow", // Segue o redirecionamento do Google
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8", // EVITA O PREFLIGHT (OPTIONS)
-                },
+                redirect: "follow", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
                 body: JSON.stringify(payload)
             });
             return await response.json();
@@ -208,7 +212,7 @@
                     sessionStorage.setItem('ebdAdminToken', res.token);
                     showApp();
                 } else {
-                    err.innerText = "Senha incorreta";
+                    err.innerText = "Senha incorreta ou erro no servidor.";
                     err.classList.remove('hidden');
                     btn.innerText = "ENTRAR";
                     btn.disabled = false;
@@ -216,7 +220,7 @@
             })
             .catch(error => {
                 console.error(error);
-                err.innerText = "Erro de conexão. Verifique se o script está publicado como 'Qualquer pessoa'.";
+                err.innerText = "Erro de conexão. Verifique se o Script foi implantado como 'Nova Versão'.";
                 err.classList.remove('hidden');
                 btn.innerText = "ENTRAR";
                 btn.disabled = false;
@@ -234,10 +238,10 @@
             location.reload();
         }
 
-        // --- CARREGAR DADOS ---
+        // --- LOAD DATA ---
         function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando dados...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Atualizando lista...</td></tr>';
 
             fetchGAS({ action: 'getData' })
             .then(res => {
@@ -246,12 +250,12 @@
                     renderTable(dbData);
                     updateCounters();
                 } else {
-                    alert('Erro ao carregar dados');
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Erro ao carregar dados do servidor.</td></tr>';
                 }
             })
             .catch(err => {
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Erro de conexão com o servidor.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Falha na conexão.</td></tr>';
             });
         }
 
@@ -260,47 +264,48 @@
             tbody.innerHTML = '';
 
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum pedido encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>';
                 return;
             }
 
             data.forEach(row => {
-                const statusClass = row.status === 'Pago' ? 'status-pago' : 'status-pendente';
-                
-                // Formata Valor
-                const valorNumerico = parseFloat(row.valor) || 0;
-                const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorNumerico);
+                let statusClass = 'status-pendente';
+                if(row.status === 'Pago') statusClass = 'status-pago';
+                if(row.status === 'Aguardando') statusClass = 'status-aguardando';
 
-                // Formata Data (string ISO para visual)
-                let dateStr = row.data;
+                // Formatação
+                const valor = parseFloat(row.valor) || 0;
+                const money = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                
+                let dateDisplay = row.data;
                 try {
-                    if(row.data.includes('T')) dateStr = new Date(row.data).toLocaleDateString('pt-BR');
+                     if(row.data.includes('T')) dateDisplay = new Date(row.data).toLocaleDateString('pt-BR');
                 } catch(e){}
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800 transition border-b border-slate-800/50";
                 tr.innerHTML = `
-                    <td class="p-4 text-xs text-slate-500">${dateStr}</td>
+                    <td class="p-4 text-xs text-slate-500">${dateDisplay}</td>
                     <td class="p-4">
                         <div class="font-bold text-white">${row.nome}</div>
-                        <div class="text-xs text-slate-500">${row.email}</div>
+                        <div class="text-xs text-slate-500">${row.cpf}</div>
                     </td>
                     <td class="p-4 hidden md:table-cell text-xs text-slate-400">${row.congregacao}</td>
-                    <td class="p-4 text-center font-bold text-white">${row.qtd}</td>
+                    <td class="p-4 hidden md:table-cell text-xs text-slate-400 font-mono">${row.modalidade}</td>
                     <td class="p-4 text-primary font-mono text-sm">${money}</td>
                     <td class="p-4 text-center"><span class="status-badge ${statusClass}">${row.status}</span></td>
                     <td class="p-4 text-right">
-                        <button onclick='openModal(${JSON.stringify(row).replace(/'/g, "&apos;")})' class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition" title="Gerenciar">
-                            <i class="fa-solid fa-pen-to-square"></i>
+                        <button onclick='openModal(${JSON.stringify(row).replace(/'/g, "&apos;")})' class="bg-slate-700 hover:bg-slate-600 text-white w-8 h-8 rounded-full transition shadow" title="Editar">
+                            <i class="fa-solid fa-pen"></i>
                         </button>
-                        ${row.whatsapp ? `<a href="https://wa.me/${row.whatsapp.replace(/\D/g,'')}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white p-2 rounded-lg ml-1 transition inline-block"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                        ${row.whatsapp ? `<a href="https://wa.me/${row.whatsapp.replace(/\D/g,'')}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white w-8 h-8 rounded-full ml-1 transition inline-flex items-center justify-center"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- FILTROS ---
+        // --- FILTROS & BUSCA ---
         function filterStatus(status) {
             if(status === 'all') renderTable(dbData);
             else renderTable(dbData.filter(d => d.status === status));
@@ -310,8 +315,7 @@
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filtered = dbData.filter(d => 
                 (d.nome && d.nome.toLowerCase().includes(term)) || 
-                (d.cpf && d.cpf.toString().includes(term)) ||
-                (d.email && d.email.toLowerCase().includes(term))
+                (d.cpf && d.cpf.includes(term))
             );
             renderTable(filtered);
         }
@@ -322,23 +326,58 @@
             document.getElementById('countPaid').innerText = dbData.filter(d => d.status === 'Pago').length;
         }
 
-        // --- MODAL & UPLOAD ---
+        // --- MODAL & LÓGICA DE 2 PEDIDOS ---
         function openModal(row) {
             document.getElementById('modalRowIndex').value = row.rowIndex;
             document.getElementById('modalName').innerText = row.nome;
             document.getElementById('modalCpf').innerText = "CPF: " + row.cpf;
+            document.getElementById('modalModality').innerText = "Ref: " + row.modalidade;
             document.getElementById('modalStatus').value = row.status;
-            
+            document.getElementById('modalObs').value = row.obs || "";
+            document.getElementById('modalCurrentCpf').value = row.cpf;
+
+            // Link Comprovante
             const proofDiv = document.getElementById('currentProofLink');
-            if(row.comprovante && row.comprovante !== "") {
-                proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="text-primary hover:underline text-xs flex items-center justify-end gap-1"><i class="fa-solid fa-link"></i> Ver comprovante atual</a>`;
+            if(row.comprovante && row.comprovante.startsWith('http')) {
+                proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="bg-slate-700 text-white text-xs px-3 py-2 rounded hover:bg-slate-600"><i class="fa-solid fa-eye"></i> Ver</a>`;
             } else {
-                proofDiv.innerHTML = '<span class="text-slate-600 text-xs">Sem comprovante anexado</span>';
+                proofDiv.innerHTML = '';
             }
 
+            // Reset File Input
             document.getElementById('modalFile').value = '';
-            document.getElementById('fileName').classList.add('hidden');
             document.getElementById('fileLabel').classList.remove('hidden');
+            document.getElementById('fileName').classList.add('hidden');
+
+            // --- LÓGICA PARA EXIBIR HISTÓRICO (2 PEDIDOS) ---
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            // Filtra outros pedidos com o mesmo CPF, excluindo o atual
+            const related = dbData.filter(d => d.cpf === row.cpf && d.rowIndex !== row.rowIndex);
+
+            if(related.length > 0) {
+                historySection.classList.remove('hidden');
+                related.forEach(r => {
+                    const rMoney = parseFloat(r.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center bg-slate-900 p-2 rounded text-xs border border-slate-700";
+                    div.innerHTML = `
+                        <div>
+                            <span class="text-white font-bold block">${r.modalidade}</span>
+                            <span class="text-slate-500">${r.status}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-primary block">${rMoney}</span>
+                            <button type="button" onclick="closeModal(); setTimeout(()=>openModal(dbData.find(d=>d.rowIndex==${r.rowIndex})), 200)" class="text-slate-400 hover:text-white underline text-[10px]">Gerenciar este</button>
+                        </div>
+                    `;
+                    historyList.appendChild(div);
+                });
+            } else {
+                historySection.classList.add('hidden');
+            }
 
             const modal = document.getElementById('actionModal');
             modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -361,22 +400,23 @@
             }
         }
 
-        // --- SALVAR ALTERAÇÕES (UPLOAD) ---
+        // --- SALVAR (UPDATE) ---
         function updateOrder(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSave');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...';
             btn.disabled = true;
 
             const rowIndex = document.getElementById('modalRowIndex').value;
             const status = document.getElementById('modalStatus').value;
+            const obs = document.getElementById('modalObs').value;
             const file = document.getElementById('modalFile').files[0];
 
             const payload = {
                 action: 'updateOrder',
                 rowIndex: rowIndex,
                 status: status,
-                obs: "Atualizado via Painel Externo"
+                obs: obs
             };
 
             if (file) {
@@ -399,22 +439,21 @@
             .then(res => {
                 if(res.status === 'success') {
                     closeModal();
-                    loadData();
+                    loadData(); // Recarrega para atualizar a tabela
                     alert('Pedido atualizado com sucesso!');
                 } else {
                     alert('Erro: ' + res.message);
                 }
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
-                btn.disabled = false;
             })
             .catch(err => {
                 console.error(err);
-                alert('Erro de conexão ao salvar.');
+                alert('Erro de conexão.');
+            })
+            .finally(() => {
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvar';
                 btn.disabled = false;
             });
         }
-
     </script>
 </body>
 </html>
