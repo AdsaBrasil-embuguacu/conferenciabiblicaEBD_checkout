@@ -1,2 +1,3 @@
-# conferenciabiblicaEBD_chekcout
+# conferenciabiblicaEBD_checkout
+
 Compra de Pulseiras EBD
