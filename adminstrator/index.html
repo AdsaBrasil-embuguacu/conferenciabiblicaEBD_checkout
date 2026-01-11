@@ -178,6 +178,19 @@
             }
         };
 
+        // --- FUNÇÃO FETCH HELPER (O SEGREDO PARA EVITAR CORS) ---
+        async function fetchGAS(payload) {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                redirect: "follow", // Segue o redirecionamento do Google
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8", // EVITA O PREFLIGHT (OPTIONS)
+                },
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        }
+
         // --- LOGIN ---
         function handleLogin(e) {
             e.preventDefault();
@@ -189,11 +202,7 @@
             btn.disabled = true;
             err.classList.add('hidden');
             
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: 'login', password: pass })
-            })
-            .then(res => res.json())
+            fetchGAS({ action: 'login', password: pass })
             .then(res => {
                 if(res.status === 'success'){
                     sessionStorage.setItem('ebdAdminToken', res.token);
@@ -207,7 +216,7 @@
             })
             .catch(error => {
                 console.error(error);
-                err.innerText = "Erro de conexão";
+                err.innerText = "Erro de conexão. Verifique se o script está publicado como 'Qualquer pessoa'.";
                 err.classList.remove('hidden');
                 btn.innerText = "ENTRAR";
                 btn.disabled = false;
@@ -230,11 +239,7 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando dados...</td></tr>';
 
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: 'getData' })
-            })
-            .then(res => res.json())
+            fetchGAS({ action: 'getData' })
             .then(res => {
                 if(res.status === 'success'){
                     dbData = res.data;
@@ -260,15 +265,17 @@
             }
 
             data.forEach(row => {
-                // Formata data
-                const dateObj = new Date(row.data);
-                const dateStr = dateObj.toLocaleDateString('pt-BR');
-                
                 const statusClass = row.status === 'Pago' ? 'status-pago' : 'status-pendente';
                 
                 // Formata Valor
                 const valorNumerico = parseFloat(row.valor) || 0;
                 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorNumerico);
+
+                // Formata Data (string ISO para visual)
+                let dateStr = row.data;
+                try {
+                    if(row.data.includes('T')) dateStr = new Date(row.data).toLocaleDateString('pt-BR');
+                } catch(e){}
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800 transition border-b border-slate-800/50";
@@ -322,7 +329,6 @@
             document.getElementById('modalCpf').innerText = "CPF: " + row.cpf;
             document.getElementById('modalStatus').value = row.status;
             
-            // Link do comprovante atual
             const proofDiv = document.getElementById('currentProofLink');
             if(row.comprovante && row.comprovante !== "") {
                 proofDiv.innerHTML = `<a href="${row.comprovante}" target="_blank" class="text-primary hover:underline text-xs flex items-center justify-end gap-1"><i class="fa-solid fa-link"></i> Ver comprovante atual</a>`;
@@ -330,7 +336,6 @@
                 proofDiv.innerHTML = '<span class="text-slate-600 text-xs">Sem comprovante anexado</span>';
             }
 
-            // Reset File input
             document.getElementById('modalFile').value = '';
             document.getElementById('fileName').classList.add('hidden');
             document.getElementById('fileLabel').classList.remove('hidden');
@@ -374,11 +379,9 @@
                 obs: "Atualizado via Painel Externo"
             };
 
-            // Se tem arquivo, converte para Base64 antes de enviar
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    // Pega apenas o conteúdo base64 após a vírgula
                     const base64 = evt.target.result.split(',')[1]; 
                     payload.fileData = base64;
                     payload.fileName = file.name;
@@ -392,15 +395,11 @@
         }
 
         function sendUpdate(payload, btn) {
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
+            fetchGAS(payload)
             .then(res => {
                 if(res.status === 'success') {
                     closeModal();
-                    loadData(); // Recarrega tabela
+                    loadData();
                     alert('Pedido atualizado com sucesso!');
                 } else {
                     alert('Erro: ' + res.message);
