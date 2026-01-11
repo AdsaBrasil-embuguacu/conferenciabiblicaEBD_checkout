@@ -39,7 +39,7 @@
             padding: 15px;
         }
 
-        /* Container Principal (O Modal) */
+        /* Container Principal */
         .checkout-modal {
             background-color: var(--panel-bg);
             width: 100%;
@@ -53,7 +53,7 @@
             flex-direction: row;
         }
 
-        /* Lateral Esquerda (Imagem e Info) */
+        /* Lateral Esquerda */
         .modal-side {
             width: 40%;
             background-color: #000;
@@ -65,7 +65,6 @@
             overflow: hidden;
         }
 
-        /* Imagem de Fundo com Overlay */
         .modal-side::before {
             content: '';
             position: absolute;
@@ -78,18 +77,12 @@
             z-index: 1;
         }
         
-        .checkout-modal:hover .modal-side::before {
-            transform: scale(1.1);
-        }
+        .checkout-modal:hover .modal-side::before { transform: scale(1.1); }
 
-        .side-content {
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-        }
+        .side-content { position: relative; z-index: 2; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
 
         .side-title {
-            font-family: 'Roboto', sans-serif;
+            font-family: Roboto', sans-serif;
             font-size: 2.5rem;
             color: var(--gold);
             line-height: 1;
@@ -114,7 +107,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* Scroll se necessário */
+            overflow-y: auto;
             max-height: 90vh;
         }
 
@@ -137,7 +130,7 @@
             margin-bottom: 20px;
         }
 
-        /* Inputs Customizados - ESTILO CORRIGIDO */
+        /* Inputs Customizados */
         label {
             color: var(--gold);
             font-size: 0.85rem;
@@ -158,6 +151,21 @@
             transition: all 0.3s;
         }
 
+        /* Correção do Select e Options */
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .custom-select option {
+            background-color: #121212;
+            color: #ffffff;
+            padding: 10px;
+        }
+
         .custom-input:focus, .custom-select:focus {
             outline: none;
             border-color: var(--gold);
@@ -166,19 +174,8 @@
             color: white;
         }
 
-        /* Estilização específica das options do select para não ficarem brancas */
-        .custom-select option {
-            background-color: #1a1a1a;
-            color: white;
-            padding: 10px;
-        }
-
-        /* Opções de Pagamento (Cards) */
-        .payment-options {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+        /* Opções de Pagamento */
+        .payment-options { display: grid; gap: 10px; margin-bottom: 20px; }
 
         .pay-card {
             background: rgba(255,255,255,0.03);
@@ -193,17 +190,8 @@
         }
 
         .pay-card:hover { border-color: #666; }
-        .pay-card.active {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.05);
-        }
-        
-        .pay-card.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: #333;
-        }
-
+        .pay-card.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .pay-card.disabled { opacity: 0.5; cursor: not-allowed; border-color: #333; }
         .radio-custom { accent-color: var(--gold); transform: scale(1.2); }
 
         /* Botão Principal */
@@ -222,87 +210,62 @@
             width: 100%;
         }
 
-        .btn-confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
-        }
-        
-        .btn-confirm:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        /* Steps Indicator */
-        .steps {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .step {
-            height: 4px;
-            flex-grow: 1;
-            background: #333;
-            margin-right: 5px;
-            border-radius: 2px;
-        }
+        /* Steps */
+        .steps { display: flex; margin-bottom: 20px; }
+        .step { height: 4px; flex-grow: 1; background: #333; margin-right: 5px; border-radius: 2px; }
         .step.active { background: var(--gold); }
 
         /* QR Code Area */
-        .qr-box {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-        .qr-title {
-            color: var(--gold);
-            font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        /* Scrollbar customizada */
-        .modal-form::-webkit-scrollbar {
-            width: 8px;
-        }
-        .modal-form::-webkit-scrollbar-track {
-            background: #1e1e1e; 
-        }
-        .modal-form::-webkit-scrollbar-thumb {
-            background: #444; 
+        .qr-box { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin-bottom: 10px; }
+        .qr-title { color: var(--gold); font-weight: bold; margin-top: 10px; margin-bottom: 5px; text-transform: uppercase; font-size: 0.8rem; }
+        
+        .pix-string {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #aaa;
+            word-break: break-all;
+            background: #000;
+            padding: 8px;
             border-radius: 4px;
-        }
-        .modal-form::-webkit-scrollbar-thumb:hover {
-            background: var(--gold); 
+            border: 1px solid #333;
+            max-height: 60px;
+            overflow-y: auto;
+            text-align: left;
         }
 
-        /* Responsividade Mobile */
+        .btn-copy-key {
+            background: transparent;
+            border: 1px solid #444;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy-key:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Scrollbar */
+        .modal-form::-webkit-scrollbar { width: 8px; }
+        .modal-form::-webkit-scrollbar-track { background: #1e1e1e; }
+        .modal-form::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        .modal-form::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        /* Mobile */
         @media (max-width: 768px) {
-            .checkout-modal {
-                flex-direction: column;
-                height: auto;
-                min-height: auto;
-                max-height: 95vh;
-                overflow-y: auto;
-            }
-            .modal-side {
-                width: 100%;
-                height: 180px; 
-                padding: 20px;
-                flex-shrink: 0;
-            }
-            .modal-form {
-                width: 100%;
-                padding: 20px;
-                overflow-y: visible; /* Deixa o scroll pro container pai no mobile */
-            }
+            .checkout-modal { flex-direction: column; height: auto; min-height: auto; max-height: 95vh; overflow-y: auto; }
+            .modal-side { width: 100%; height: 180px; padding: 20px; flex-shrink: 0; }
+            .modal-form { width: 100%; padding: 20px; overflow-y: visible; }
             .side-title { font-size: 2rem; }
         }
         
-        /* Utilitários */
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
         .text-gold { color: var(--gold); }
@@ -313,36 +276,127 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
-        // --- CONFIGURAÇÕES ---
-        const CONST_PIX_KEY_VISTA = "31504700508"; // CHAVE PIX ÚNICA/ENTRADA
-        const CONST_PIX_KEY_PARCELA2 = "38757619875"; // CHAVE PIX SEGUNDA PARCELA (Pode ser a mesma)
-        const CONST_WHATSAPP = "5511999999999"; 
+        // =========================================================
+        // CLASSE GERADORA DE PIX (EMV - BR CODE)
+        // =========================================================
+        class PixPayload {
+            constructor(key, name, city, amount, txid) {
+                this.key = key;
+                this.name = this.normalize(name).substring(0, 25).toUpperCase();
+                this.city = this.normalize(city).substring(0, 15).toUpperCase();
+                this.amount = amount.toFixed(2);
+                this.txid = txid || '***';
+                
+                this.ID_PAYLOAD_FORMAT_INDICATOR = '00';
+                this.ID_MERCHANT_ACCOUNT_INFORMATION = '26';
+                this.ID_MERCHANT_ACCOUNT_INFORMATION_GUI = '00';
+                this.ID_MERCHANT_ACCOUNT_INFORMATION_KEY = '01';
+                this.ID_MERCHANT_ACCOUNT_INFORMATION_DESCRIPTION = '02';
+                this.ID_MERCHANT_CATEGORY_CODE = '52';
+                this.ID_TRANSACTION_CURRENCY = '53';
+                this.ID_TRANSACTION_AMOUNT = '54';
+                this.ID_COUNTRY_CODE = '58';
+                this.ID_MERCHANT_NAME = '59';
+                this.ID_MERCHANT_CITY = '60';
+                this.ID_ADDITIONAL_DATA_FIELD_TEMPLATE = '62';
+                this.ID_ADDITIONAL_DATA_FIELD_TEMPLATE_TXID = '05';
+                this.ID_CRC16 = '63';
+            }
+
+            normalize(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            getValue(id, value) {
+                const size = String(value.length).padStart(2, '0');
+                return id + size + value;
+            }
+
+            getMerchantAccountInformation() {
+                const gui = this.getValue(this.ID_MERCHANT_ACCOUNT_INFORMATION_GUI, 'br.gov.bcb.pix');
+                const key = this.getValue(this.ID_MERCHANT_ACCOUNT_INFORMATION_KEY, this.key);
+                return this.getValue(this.ID_MERCHANT_ACCOUNT_INFORMATION, gui + key);
+            }
+
+            getAdditionalDataFieldTemplate() {
+                const txid = this.getValue(this.ID_ADDITIONAL_DATA_FIELD_TEMPLATE_TXID, this.txid);
+                return this.getValue(this.ID_ADDITIONAL_DATA_FIELD_TEMPLATE, txid);
+            }
+
+            getPayload() {
+                const payload = [
+                    this.getValue(this.ID_PAYLOAD_FORMAT_INDICATOR, '01'),
+                    this.getMerchantAccountInformation(),
+                    this.getValue(this.ID_MERCHANT_CATEGORY_CODE, '0000'),
+                    this.getValue(this.ID_TRANSACTION_CURRENCY, '986'),
+                    this.getValue(this.ID_TRANSACTION_AMOUNT, this.amount),
+                    this.getValue(this.ID_COUNTRY_CODE, 'BR'),
+                    this.getValue(this.ID_MERCHANT_NAME, this.name),
+                    this.getValue(this.ID_MERCHANT_CITY, this.city),
+                    this.getAdditionalDataFieldTemplate(),
+                    this.ID_CRC16 + '04'
+                ].join('');
+
+                return payload + this.getCRC16(payload);
+            }
+
+            getCRC16(payload) {
+                function ord(str) { return str.charCodeAt(0); }
+                function dechex(number) {
+                    if (number < 0) number = 0xFFFFFFFF + number + 1;
+                    return parseInt(number, 10).toString(16).toUpperCase();
+                }
+
+                let polinomio = 0x1021;
+                let resultado = 0xFFFF;
+
+                for (let width = 0; width < payload.length; width++) {
+                    resultado ^= (ord(payload[width]) << 8);
+                    for (let i = 0; i < 8; i++) {
+                        if ((resultado <<= 1) & 0x10000) resultado ^= polinomio;
+                        resultado &= 0xFFFF;
+                    }
+                }
+
+                return dechex(resultado).padStart(4, '0');
+            }
+        }
+
+        // =========================================================
+        // CONFIGURAÇÕES DO EVENTO
+        // =========================================================
+        // Use a chave PIX real (CPF, E-mail, Celular ou Aleatória)
+        const CONST_PIX_KEY = "31504700805"; // EX: SEU CPF OU EMAIL
+        const CONST_PIX_NAME = "ROSEMEIREEBD";
+        const CONST_PIX_CITY = "SAO PAULO"; 
+        const CONST_WHATSAPP = "5511999251821"; 
         
         const VALOR_TOTAL = 70.00;
         const VALOR_PARCELA = 35.00;
-        const DATA_LIMITE_PARCELAMENTO = new Date('2026-01-10T23:59:59'); // DATA LIMITE: 20/02/2026
+        const DATA_LIMITE_PARCELAMENTO = new Date('2026-02-20T23:59:59');
 
         const CONGREGACOES = [
             "CHACARA FLORIDA", "CIPÓ", "KM 37", "JUQUITIBA", "VILA GUIOMAR"
         ];
 
         function App() {
-            const [step, setStep] = useState(1); // 1: Dados, 2: Pagamento, 3: Pix
+            const [step, setStep] = useState(1);
             const [formData, setFormData] = useState({
                 nome: '',
                 email: '',
                 cpf: '',
-                telefone: '', // Whatsapp
+                telefone: '',
                 congregacao: '',
                 quantidade: 1,
-                modalidade: 'integral' // integral, parcelado
+                modalidade: 'integral'
             });
             const [total, setTotal] = useState(VALOR_TOTAL);
             const [parcelamentoDisponivel, setParcelamentoDisponivel] = useState(true);
+            const [generatedPayloads, setGeneratedPayloads] = useState({});
 
-            // Verifica data limite ao carregar
+            // Verifica data limite
             useEffect(() => {
                 const hoje = new Date();
                 if (hoje > DATA_LIMITE_PARCELAMENTO) {
@@ -350,13 +404,31 @@
                 }
             }, []);
 
-            // Calcula total dinâmico
+            // Calcula total e gera payloads dinâmicos
             useEffect(() => {
-                // Se for integral: valor total * qtd
-                // Se for parcelado: valor da entrada (parcela 1) * qtd (para exibir o que paga agora)
-                // Mas vamos guardar o valor que ele vai pagar AGORA no estado total
-                const priceNow = formData.modalidade === 'integral' ? VALOR_TOTAL : VALOR_PARCELA;
-                setTotal(priceNow * formData.quantidade);
+                const basePrice = formData.modalidade === 'integral' ? VALOR_TOTAL : VALOR_PARCELA;
+                const valorAtual = basePrice * formData.quantidade;
+                setTotal(valorAtual);
+
+                // Gerar Payloads PIX
+                // TxID é um identificador único. Usamos Date.now() para simular
+                const txidBase = "EBD" + Date.now().toString().slice(-10); 
+                
+                // Payload Integral
+                const pixIntegral = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_TOTAL * formData.quantidade, txidBase + "INT").getPayload();
+                
+                // Payload Parcela 1
+                const pixP1 = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_PARCELA * formData.quantidade, txidBase + "P1").getPayload();
+                
+                // Payload Parcela 2 (Mesmo valor, mas identificador diferente)
+                const pixP2 = new PixPayload(CONST_PIX_KEY, CONST_PIX_NAME, CONST_PIX_CITY, VALOR_PARCELA * formData.quantidade, txidBase + "P2").getPayload();
+
+                setGeneratedPayloads({
+                    integral: pixIntegral,
+                    p1: pixP1,
+                    p2: pixP2
+                });
+
             }, [formData.quantidade, formData.modalidade]);
 
             const handleChange = (e) => {
@@ -364,11 +436,15 @@
                 setFormData(prev => ({ ...prev, [name]: value }));
             };
 
-            // Funções de Navegação
             const goNext = () => setStep(prev => prev + 1);
             const goBack = () => setStep(prev => prev - 1);
 
-            // Gerador de Link WhatsApp
+            const copyToClipboard = (text, type = "código") => {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert(`${type} copiado para a área de transferência!`);
+                });
+            };
+
             const finalizarPedido = () => {
                 const tipoPgto = formData.modalidade === 'integral' 
                     ? 'À Vista (Integral)' 
@@ -384,12 +460,22 @@
                             `--------------------------------%0A` +
                             `🎟 *Qtd:* ${formData.quantidade}%0A` +
                             `💲 *Modalidade:* ${tipoPgto}%0A` +
-                            `💰 *Valor Pago Agora:* R$ ${total.toFixed(2).replace('.',',')}%0A` +
+                            `💰 *Valor Total:* R$ ${(formData.modalidade === 'integral' ? total : total * 2).toFixed(2).replace('.',',')}%0A` +
                             `--------------------------------%0A` +
-                            `Segue anexo o comprovante PIX.`;
+                            `Segue anexo o comprovante.`;
                 
                 window.location.href = `https://wa.me/${CONST_WHATSAPP}?text=${msg}`;
             };
+
+            // Componente auxiliar para exibir a chave simples
+            const KeyDisplay = () => (
+                <div className="d-flex flex-column align-items-center mt-2 mb-3">
+                    <span className="text-muted small">Chave PIX (CPF): {CONST_PIX_KEY}</span>
+                    <button className="btn-copy-key" onClick={() => copyToClipboard(CONST_PIX_KEY, "Chave PIX")}>
+                        <i className="fa-regular fa-copy me-1"></i> Copiar apenas a chave
+                    </button>
+                </div>
+            );
 
             return (
                 <div className="checkout-modal fade-in">
@@ -397,8 +483,12 @@
                     {/* LADO ESQUERDO: Visual */}
                     <div className="modal-side">
                         <div className="side-content">
-                            <h1 className="side-title">13 de março<br/>2026</h1>
-                            <p style={{color: '#ccc', letterSpacing: '1px'}}>ADSA BRASIL SANTO AMARO</p>
+                            <h1 className="side-title">14 DE MARÇO<br/>2026</h1>
+                            <br/>
+                            <br/>
+                            <p style={{color: '#ccc', letterSpacing: '1px'}}>CONFERÊNCIA EBD-ADSA BRASIL</p>
+                            <br/>
+                            <br/>
                             <div className="side-price-tag">R$ 70,00</div>
                         </div>
                     </div>
@@ -406,7 +496,6 @@
                     {/* LADO DIREITO: Formulário */}
                     <div className="modal-form">
                         
-                        {/* Indicador de Passos */}
                         <div className="steps">
                             <div className={`step ${step >= 1 ? 'active' : ''}`}></div>
                             <div className={`step ${step >= 2 ? 'active' : ''}`}></div>
@@ -476,7 +565,6 @@
 
                                     <label>Modalidade</label>
                                     <div className="payment-options">
-                                        {/* Opção Integral */}
                                         <div 
                                             className={`pay-card ${formData.modalidade === 'integral' ? 'active' : ''}`}
                                             onClick={() => setFormData({...formData, modalidade: 'integral'})}
@@ -491,7 +579,6 @@
                                             </div>
                                         </div>
 
-                                        {/* Opção Parcelada - Condicional */}
                                         {parcelamentoDisponivel ? (
                                             <div 
                                                 className={`pay-card ${formData.modalidade === 'parcelado' ? 'active' : ''}`}
@@ -546,50 +633,55 @@
                                     {/* CASO 1: INTEGRAL */}
                                     {formData.modalidade === 'integral' && (
                                         <div className="mb-4">
-                                            <div className="qr-title">Pagamento Único (Válido por 24h)</div>
+                                            <div className="qr-title">Pagamento Único (R$ {total.toFixed(2).replace('.',',')})</div>
                                             <div className="qr-box">
-                                                {/* QR Code Simulado - Gerador do Google Charts */}
-                                                <img src={`https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${CONST_PIX_KEY_VISTA}`} alt="QR Code" />
+                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedPayloads.integral)}`} alt="QR Code" />
                                             </div>
-                                            <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2">
-                                                <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_VISTA}</span>
-                                                <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_VISTA)}>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <div className="pix-string w-100">{generatedPayloads.integral}</div>
+                                                <button className="btn btn-gold py-1 px-3" onClick={() => copyToClipboard(generatedPayloads.integral, "Código Copia e Cola")}>
                                                     <i className="fa-regular fa-copy"></i>
                                                 </button>
                                             </div>
-                                            <div className="text-gold fw-bold mt-2">Valor: R$ {total.toFixed(2).replace('.',',')}</div>
+                                            
+                                            <KeyDisplay />
+                                            
+                                            <small className="text-gold mt-2 d-block">Válido por 24 horas</small>
                                         </div>
                                     )}
 
                                     {/* CASO 2: PARCELADO */}
                                     {formData.modalidade === 'parcelado' && (
                                         <>
-                                            <div className="mb-4 pb-3 border-bottom border-secondary">
-                                                <div className="qr-title">1ª Parcela (Pagar Agora) - Válido 24h</div>
+                                            <div className="mb-4 pb-4 border-bottom border-secondary">
+                                                <div className="qr-title text-white">1ª Parcela - Entrada (R$ {total.toFixed(2).replace('.',',')})</div>
                                                 <div className="qr-box">
-                                                    <img src={`https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${CONST_PIX_KEY_VISTA}`} alt="QR Code 1" />
+                                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedPayloads.p1)}`} alt="QR Code 1" />
                                                 </div>
-                                                <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2">
-                                                    <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_VISTA}</span>
-                                                    <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_VISTA)}>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div className="pix-string w-100">{generatedPayloads.p1}</div>
+                                                    <button className="btn btn-gold py-1 px-3" onClick={() => copyToClipboard(generatedPayloads.p1, "Código Copia e Cola")}>
                                                         <i className="fa-regular fa-copy"></i>
                                                     </button>
                                                 </div>
-                                                <div className="text-gold fw-bold mt-2">Valor: R$ {(VALOR_PARCELA * formData.quantidade).toFixed(2).replace('.',',')}</div>
+                                                
+                                                <KeyDisplay />
+
+                                                <small className="text-gold mt-1 d-block">Pagar Agora</small>
                                             </div>
 
                                             <div className="mb-4">
-                                                <div className="qr-title text-muted">2ª Parcela (Vencimento em 30 dias)</div>
+                                                <div className="qr-title text-muted">2ª Parcela - Vencimento em 30 dias</div>
                                                 <div className="qr-box opacity-75">
-                                                    <img src={`https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${CONST_PIX_KEY_PARCELA2}`} alt="QR Code 2" />
+                                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedPayloads.p2)}`} alt="QR Code 2" />
                                                 </div>
-                                                <div className="bg-dark p-2 rounded border border-secondary d-flex justify-content-between align-items-center mt-2 opacity-75">
-                                                    <span className="text-truncate small text-white me-2">{CONST_PIX_KEY_PARCELA2}</span>
-                                                    <button className="btn btn-sm btn-outline-light" onClick={() => navigator.clipboard.writeText(CONST_PIX_KEY_PARCELA2)}>
+                                                <div className="d-flex align-items-center gap-2 opacity-75">
+                                                    <div className="pix-string w-100">{generatedPayloads.p2}</div>
+                                                    <button className="btn btn-outline-secondary py-1 px-3" onClick={() => copyToClipboard(generatedPayloads.p2, "Código Copia e Cola")}>
                                                         <i className="fa-regular fa-copy"></i>
                                                     </button>
                                                 </div>
-                                                <small className="text-muted d-block mt-2">Guarde este código para o próximo mês.</small>
+                                                <small className="text-muted d-block mt-1">Salve este código para o próximo mês</small>
                                             </div>
                                         </>
                                     )}
@@ -601,7 +693,7 @@
                                 </div>
 
                                 <div className="d-flex gap-2 mt-auto">
-                                    <button className="btn btn-outline-secondary w-50" onClick={goBack}>Voltar</button>
+                                    <button className="btn btn-outline-secondary w-50" onClick={goBack}>Corrigir</button>
                                     <button className="btn-confirm w-50 m-0" onClick={finalizarPedido}>
                                         <i className="fa-brands fa-whatsapp me-2"></i> Enviar Comp.
                                     </button>
