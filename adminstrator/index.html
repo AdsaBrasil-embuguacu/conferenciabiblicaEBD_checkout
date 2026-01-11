@@ -86,7 +86,7 @@
                                 <th class="p-4">Data</th>
                                 <th class="p-4">Participante</th>
                                 <th class="p-4 hidden md:table-cell">Congregação</th>
-                                <th class="p-4 hidden md:table-cell">Modo</th>
+                                <th class="p-4 text-center">Qtd</th> <th class="p-4 hidden md:table-cell">Modo</th>
                                 <th class="p-4">Valor</th>
                                 <th class="p-4 text-center">Status</th>
                                 <th class="p-4 text-right">Ação</th>
@@ -115,12 +115,14 @@
 
                 <form id="updateForm" onsubmit="updateOrder(event)" class="my-5">
                     <input type="hidden" id="modalRowIndex">
-                    <input type="hidden" id="modalCurrentCpf"> <div class="mb-4">
+                    <input type="hidden" id="modalCurrentCpf"> 
+                    
+                    <div class="mb-4">
                         <p class="text-xs text-slate-500 uppercase font-bold mb-1">Participante</p>
                         <p id="modalName" class="text-white font-medium text-lg leading-tight">Nome aqui</p>
                         <p id="modalCpf" class="text-sm text-slate-400 mt-1">CPF: 000.000.000-00</p>
                         <p id="modalModality" class="text-xs text-primary mt-1 font-mono">Modalidade: Integral</p>
-                    </div>
+                        <p id="modalQtd" class="text-xs text-slate-300 mt-1 font-bold">Qtd Pulseiras: 1</p> </div>
 
                     <div class="mb-4 bg-slate-900 p-3 rounded border border-slate-700">
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Status Financeiro</label>
@@ -185,7 +187,6 @@
 
         // --- FETCH COM TRATAMENTO DE ERRO JSON ---
         async function fetchGAS(payload) {
-            // Importante: text/plain evita Preflight (OPTIONS)
             const response = await fetch(API_URL, {
                 method: "POST",
                 redirect: "follow", 
@@ -241,7 +242,7 @@
         // --- LOAD DATA ---
         function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Atualizando lista...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Atualizando lista...</td></tr>';
 
             fetchGAS({ action: 'getData' })
             .then(res => {
@@ -250,12 +251,12 @@
                     renderTable(dbData);
                     updateCounters();
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Erro ao carregar dados do servidor.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-400">Erro ao carregar dados do servidor.</td></tr>';
                 }
             })
             .catch(err => {
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-400">Falha na conexão.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-400">Falha na conexão.</td></tr>';
             });
         }
 
@@ -264,7 +265,7 @@
             tbody.innerHTML = '';
 
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>';
                 return;
             }
 
@@ -291,7 +292,7 @@
                         <div class="text-xs text-slate-500">${row.cpf}</div>
                     </td>
                     <td class="p-4 hidden md:table-cell text-xs text-slate-400">${row.congregacao}</td>
-                    <td class="p-4 hidden md:table-cell text-xs text-slate-400 font-mono">${row.modalidade}</td>
+                    <td class="p-4 text-center font-bold text-white">${row.qtd}</td> <td class="p-4 hidden md:table-cell text-xs text-slate-400 font-mono">${row.modalidade}</td>
                     <td class="p-4 text-primary font-mono text-sm">${money}</td>
                     <td class="p-4 text-center"><span class="status-badge ${statusClass}">${row.status}</span></td>
                     <td class="p-4 text-right">
@@ -326,12 +327,13 @@
             document.getElementById('countPaid').innerText = dbData.filter(d => d.status === 'Pago').length;
         }
 
-        // --- MODAL & LÓGICA DE 2 PEDIDOS ---
+        // --- MODAL ---
         function openModal(row) {
             document.getElementById('modalRowIndex').value = row.rowIndex;
             document.getElementById('modalName').innerText = row.nome;
             document.getElementById('modalCpf').innerText = "CPF: " + row.cpf;
             document.getElementById('modalModality').innerText = "Ref: " + row.modalidade;
+            document.getElementById('modalQtd').innerText = "Qtd Pulseiras: " + row.qtd; // Atualiza Modal TBM
             document.getElementById('modalStatus').value = row.status;
             document.getElementById('modalObs').value = row.obs || "";
             document.getElementById('modalCurrentCpf').value = row.cpf;
@@ -349,12 +351,11 @@
             document.getElementById('fileLabel').classList.remove('hidden');
             document.getElementById('fileName').classList.add('hidden');
 
-            // --- LÓGICA PARA EXIBIR HISTÓRICO (2 PEDIDOS) ---
+            // --- LÓGICA HISTÓRICO ---
             const historySection = document.getElementById('historySection');
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
 
-            // Filtra outros pedidos com o mesmo CPF, excluindo o atual
             const related = dbData.filter(d => d.cpf === row.cpf && d.rowIndex !== row.rowIndex);
 
             if(related.length > 0) {
@@ -365,7 +366,7 @@
                     div.className = "flex justify-between items-center bg-slate-900 p-2 rounded text-xs border border-slate-700";
                     div.innerHTML = `
                         <div>
-                            <span class="text-white font-bold block">${r.modalidade}</span>
+                            <span class="text-white font-bold block">${r.modalidade} (Qtd: ${r.qtd})</span>
                             <span class="text-slate-500">${r.status}</span>
                         </div>
                         <div class="text-right">
@@ -439,7 +440,7 @@
             .then(res => {
                 if(res.status === 'success') {
                     closeModal();
-                    loadData(); // Recarrega para atualizar a tabela
+                    loadData();
                     alert('Pedido atualizado com sucesso!');
                 } else {
                     alert('Erro: ' + res.message);
