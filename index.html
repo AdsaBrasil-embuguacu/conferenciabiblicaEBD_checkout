@@ -517,7 +517,19 @@
                         txidBase + "P1"
                     ).getPayload();
                     
+                    // ==========================================
+                    // NOVO: GERA O CÓDIGO DA PARCELA 2 (P2)
+                    // ==========================================
+                    const pixP2 = new PixPayload(
+                        CONST_PIX_KEY, 
+                        CONST_PIX_NAME, 
+                        CONST_PIX_CITY, 
+                        VALOR_PARCELA * formData.quantidade, 
+                        txidBase + "P2"
+                    ).getPayload();
+
                     newPayloads.p1 = pixP1;
+                    newPayloads.p2 = pixP2;
                 }
 
                 setGeneratedPayloads(newPayloads);
@@ -541,7 +553,7 @@
             };
 
             // =============================================================
-            // FUNÇÃO ATUALIZADA
+            // FUNÇÃO ATUALIZADA - ENVIO DE P2 PARA O BACKEND
             // =============================================================
             const finalizarPedido = async () => {
                 if (isSubmitting) return; 
@@ -558,7 +570,9 @@
                 const orderData = {
                     ...formData,
                     total: valorTotalPedido,
-                    tipoPgto: tipoPgto
+                    tipoPgto: tipoPgto,
+                    // AQUI ENVIAMOS A STRING PIX DA PARCELA 2 PARA O BACKEND ENVIAR POR EMAIL
+                    pixStringP2: formData.modalidade === 'parcelado' ? generatedPayloads.p2 : ''
                 };
 
                 try {
