@@ -338,7 +338,7 @@
 
     <div id="root"></div>
 
-    <a href="https://adsabrasil-embuguacu.github.io/conferenciabiblicaEBD_checkout/adminstrator/index.html" class="admin-float-btn" title="Área Administrativa">
+    <a href="#" class="admin-float-btn" title="Área Administrativa">
         <i class="fa-solid fa-lock"></i>
     </a>
 
@@ -567,14 +567,43 @@
             const goBack = () => setStep(prev => prev - 1);
 
             const copyToClipboard = (text) => {
-                navigator.clipboard.writeText(text).then(() => {
+                // Tenta API moderna primeiro
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        setModalText("Código Pix Copiado!");
+                        setShowCopyModal(true);
+                        setTimeout(() => setShowCopyModal(false), 2000);
+                    }).catch(err => {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            };
+
+            const fallbackCopy = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
                     setModalText("Código Pix Copiado!");
                     setShowCopyModal(true);
                     setTimeout(() => setShowCopyModal(false), 2000);
-                });
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                    setModalText("Erro ao copiar.");
+                    setShowCopyModal(true);
+                    setTimeout(() => setShowCopyModal(false), 2000);
+                }
+                document.body.removeChild(textArea);
             };
 
-            // =============================================================
+           // =============================================================
             // FUNÇÃO ATUALIZADA - ENVIO DE P2 PARA O BACKEND
             // =============================================================
             const finalizarPedido = async () => {
@@ -593,12 +622,13 @@
                     ...formData,
                     total: valorTotalPedido,
                     tipoPgto: tipoPgto,
-                    // AQUI ENVIAMOS A STRING PIX DA PARCELA 2 PARA O BACKEND ENVIAR POR EMAIL
+                    // ENVIA O PIX STRING DA P2 PARA O BACKEND
                     pixStringP2: formData.modalidade === 'parcelado' ? generatedPayloads.p2 : ''
                 };
 
                 try {
-                    await fetch(API_URL, {
+                    // Envio fire-and-forget (não espera resposta para não travar o redirecionamento)
+                    fetch(API_URL, {
                         method: 'POST',
                         mode: 'no-cors', 
                         headers: {
@@ -610,7 +640,7 @@
                         })
                     });
                 } catch (error) {
-                    console.error("Erro ao salvar pedido na planilha:", error);
+                    console.error("Erro ao salvar pedido:", error);
                 }
 
                 const msg = `*COMPROVANTE PULSEIRA EBD 2026*%0A` +
@@ -628,7 +658,12 @@
                             `--------------------------------%0A` +
                             `Segue anexo o comprovante.`;
                 
-                window.location.href = `https://wa.me/${CONST_WHATSAPP}?text=${msg}`;
+                // Abre o WhatsApp em nova aba
+                window.open(`https://wa.me/${CONST_WHATSAPP}?text=${msg}`, '_blank');
+
+                // Avança para o Passo 4 (Mensagem de Sucesso)
+                setStep(4);
+                setIsSubmitting(false);
             };
 
             return (
@@ -666,11 +701,14 @@
                     {/* LADO DIREITO */}
                     <div className="modal-form">
                         
-                        <div className="steps">
-                            <div className={`step ${step >= 1 ? 'active' : ''}`}></div>
-                            <div className={`step ${step >= 2 ? 'active' : ''}`}></div>
-                            <div className={`step ${step >= 3 ? 'active' : ''}`}></div>
-                        </div>
+                        {/* Exibe Steps apenas se não estiver na tela final (Passo 4) */}
+                        {step < 4 && (
+                            <div className="steps">
+                                <div className={`step ${step >= 1 ? 'active' : ''}`}></div>
+                                <div className={`step ${step >= 2 ? 'active' : ''}`}></div>
+                                <div className={`step ${step >= 3 ? 'active' : ''}`}></div>
+                            </div>
+                        )}
 
                         {/* PASSO 1 */}
                         {step === 1 && (
@@ -793,8 +831,8 @@
                                     </div>
                                     
                                     <div className="d-flex justify-content-between align-items-center mt-4 border-top border-secondary pt-3">
-                                        <span className="text-muted">Pagar Agora:</span>
-                                        <span className="h4 text-gold mb-0 fw-bold">R$ {total.toFixed(2).replace('.',',')}</span>
+                                            <span className="text-muted">Pagar Agora:</span>
+                                            <span className="h4 text-gold mb-0 fw-bold">R$ {total.toFixed(2).replace('.',',')}</span>
                                     </div>
                                 </div>
 
@@ -835,7 +873,7 @@
                                             <small className="text-gold mt-2 d-block">Válido por 24 horas</small>
                                         </div>
                                     )}
-
+                                    
                                     {/* CASO 2: PARCELADO (APENAS ENTRADA) */}
                                     {formData.modalidade === 'parcelado' && generatedPayloads.p1 && (
                                         <>
@@ -887,6 +925,26 @@
                                         )}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* PASSO 4: MENSAGEM DE SUCESSO */}
+                        {step === 4 && (
+                            <div className="fade-in d-flex flex-column h-100 text-center justify-content-center">
+                                <div className="mb-4">
+                                    <div className="check-circle" style={{width: '90px', height: '90px', margin: '0 auto'}}>
+                                        <i className="fa-solid fa-check fa-3x text-gold"></i>
+                                    </div>
+                                </div>
+                                <h2 className="text-white mb-3">Pedido Realizado com Sucesso!</h2>
+                                <p className="text-muted mb-4">
+                                    Se ainda não enviou o comprovante, você tem <strong>24hs</strong> para entrar em contato com o Coordenador da EBD do Campo.
+                                </p>
+                                <p className="text-gold fw-bold">Deus abençoe!</p>
+                                
+                                <button className="btn btn-outline-secondary mt-5" onClick={() => window.location.reload()}>
+                                    Voltar ao Início
+                                </button>
                             </div>
                         )}
 
