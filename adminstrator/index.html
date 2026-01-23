@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel EBD | Gestão</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -19,6 +23,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         .glass-panel { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+        
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
         .status-pago { background-color: #dcfce7; color: #166534; }
         .status-pendente { background-color: #fee2e2; color: #991b1b; }
@@ -28,16 +33,15 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
 
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
-            .mobile-hide { display: none; }
-        }
-        
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Card Animation */
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-slate-900">
@@ -98,17 +102,50 @@
                 </div>
                 
                 <div class="flex gap-2 items-center">
-                    <div class="relative">
-                        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Buscar..." class="bg-slate-800 border-none text-white text-sm rounded-full pl-4 pr-10 py-2 w-32 md:w-64 focus:ring-1 focus:ring-primary outline-none transition-all focus:w-40 md:focus:w-72">
+                    <div class="relative hidden md:block">
+                        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Buscar por Nome ou CPF..." class="bg-slate-800 border-none text-white text-sm rounded-full pl-4 pr-10 py-2 w-64 focus:ring-1 focus:ring-primary outline-none transition-all focus:w-72">
                         <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-slate-500 text-xs"></i>
                     </div>
+                    
+                    <button onclick="generatePDF()" class="bg-red-600 text-white w-9 h-9 rounded-full hover:bg-red-500 transition flex items-center justify-center shadow-lg" title="Exportar PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+
                     <button onclick="loadData()" class="bg-primary text-slate-900 w-9 h-9 rounded-full hover:bg-yellow-600 transition flex items-center justify-center shadow-lg" title="Atualizar">
                         <i class="fa-solid fa-rotate"></i>
                     </button>
                 </div>
             </header>
 
-            <div class="flex-1 overflow-hidden p-2 md:p-6 flex flex-col">
+            <div class="flex-1 overflow-hidden p-2 md:p-6 flex flex-col gap-4">
+                
+                <div class="md:hidden">
+                    <input type="text" id="mobileSearchInput" onkeyup="document.getElementById('searchInput').value = this.value; searchTable()" placeholder="Buscar..." class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg p-2 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+                    <div class="glass-panel p-4 stat-card border-l-4 border-l-blue-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Total Inscrições</p>
+                        <h3 class="text-2xl font-bold text-white mt-1" id="cardTotalCount">0</h3>
+                        <p class="text-[10px] text-slate-500">Geral</p>
+                    </div>
+                    <div class="glass-panel p-4 stat-card border-l-4 border-l-green-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Receita (Pago)</p>
+                        <h3 class="text-2xl font-bold text-green-400 mt-1" id="cardTotalRevenue">R$ 0,00</h3>
+                        <p class="text-[10px] text-slate-500">Confirmado em caixa</p>
+                    </div>
+                    <div class="glass-panel p-4 stat-card border-l-4 border-l-red-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Pendente</p>
+                        <h3 class="text-2xl font-bold text-red-400 mt-1" id="cardPendingRevenue">R$ 0,00</h3>
+                        <p class="text-[10px] text-slate-500">A receber</p>
+                    </div>
+                    <div class="glass-panel p-4 stat-card border-l-4 border-l-slate-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Cancelados</p>
+                        <h3 class="text-2xl font-bold text-slate-300 mt-1" id="cardCanceledCount">0</h3>
+                        <p class="text-[10px] text-slate-500">Inativos</p>
+                    </div>
+                </div>
+
                 <div class="glass-panel flex-1 flex flex-col overflow-hidden shadow-xl">
                     <div class="overflow-auto flex-1 custom-scrollbar">
                         <table class="w-full text-left text-sm text-slate-400">
@@ -125,7 +162,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tableBody" class="divide-y divide-slate-700/50">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                     <div class="p-2 bg-slate-800 text-xs text-center text-slate-500 md:hidden border-t border-slate-700">
@@ -194,7 +231,6 @@
                                 <span id="fileName" class="text-sm text-primary font-medium hidden break-all"></span>
                             </label>
                             
-                            <!-- DIV ONDE O LINK/URL SERÁ INJETADO -->
                             <div id="currentProofLink" class="mt-2"></div>
                         </div>
                     </div>
@@ -204,7 +240,7 @@
                             <i class="fa-solid fa-clock-rotate-left"></i> Histórico (Mesmo CPF)
                         </p>
                         <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-2">
@@ -230,6 +266,7 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbwk4myV5ohip_S2cDXGouTrmE00OdlKeBR3FEa_j2R66JRVMz6wM-DM98hmIA4sUJ_-1Q/exec"; 
         
         let dbData = [];
+        let filteredData = []; // Para armazenar dados filtrados
 
         // UI Helpers
         const sidebar = document.getElementById('sidebar');
@@ -315,8 +352,9 @@
             .then(res => {
                 if(res.status === 'success'){
                     dbData = res.data;
+                    filteredData = dbData; // Inicializa filtrado com tudo
                     renderTable(dbData);
-                    updateCounters();
+                    updateDashboardCards(dbData); // Atualiza os Cards
                 } else {
                     tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-400">Erro ao carregar dados.</td></tr>';
                 }
@@ -330,6 +368,7 @@
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+            filteredData = data; // Atualiza a variável global de filtragem para uso no PDF
 
             if(data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">Nenhum registro.</td></tr>';
@@ -373,27 +412,104 @@
                 `;
                 tbody.appendChild(tr);
             });
+            
+            // Atualiza os contadores laterais
+            document.getElementById('countAll').innerText = dbData.length;
+            document.getElementById('countPending').innerText = dbData.filter(d => d.status === 'Pendente').length;
+            document.getElementById('countPaid').innerText = dbData.filter(d => d.status === 'Pago').length;
         }
 
-        // --- UTILS ---
+        // --- DASHBOARD CARDS & TOTAIS ---
+        function updateDashboardCards(data) {
+            // Total Geral
+            const totalCount = data.length;
+            
+            // Receita Paga
+            const totalPaid = data
+                .filter(d => d.status === 'Pago')
+                .reduce((acc, curr) => acc + (parseFloat(curr.valor) || 0), 0);
+            
+            // Receita Pendente
+            const totalPending = data
+                .filter(d => d.status === 'Pendente')
+                .reduce((acc, curr) => acc + (parseFloat(curr.valor) || 0), 0);
+
+            // Cancelados
+            const totalCanceled = data.filter(d => d.status === 'Cancelado').length;
+
+            // Update DOM
+            document.getElementById('cardTotalCount').innerText = totalCount;
+            document.getElementById('cardTotalRevenue').innerText = totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('cardPendingRevenue').innerText = totalPending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('cardCanceledCount').innerText = totalCanceled;
+        }
+
+        // --- FILTROS & BUSCA ---
         function filterStatus(status) {
-            if(status === 'all') renderTable(dbData);
-            else renderTable(dbData.filter(d => d.status === status));
+            let result;
+            if(status === 'all') result = dbData;
+            else result = dbData.filter(d => d.status === status);
+            
+            renderTable(result);
         }
 
         function searchTable() {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = dbData.filter(d => 
+            const result = dbData.filter(d => 
                 (d.nome && d.nome.toLowerCase().includes(term)) || 
                 (d.cpf && d.cpf.includes(term))
             );
-            renderTable(filtered);
+            renderTable(result);
         }
 
-        function updateCounters() {
-            document.getElementById('countAll').innerText = dbData.length;
-            document.getElementById('countPending').innerText = dbData.filter(d => d.status === 'Pendente').length;
-            document.getElementById('countPaid').innerText = dbData.filter(d => d.status === 'Pago').length;
+        // --- EXPORTAR PDF ---
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Cabeçalho
+            doc.setFontSize(18);
+            doc.setTextColor(212, 175, 55); // Gold
+            doc.text("Relatório Geral - EBD 2026", 14, 22);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+            
+            // Preparar dados para tabela
+            const tableColumn = ["Data", "Nome", "CPF", "Congregação", "Modo", "Valor", "Status"];
+            const tableRows = [];
+
+            filteredData.forEach(row => {
+                let dataF = row.data;
+                try { if(row.data.includes('T')) dataF = new Date(row.data).toLocaleDateString('pt-BR'); } catch(e){}
+                
+                const valorF = parseFloat(row.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                const rowData = [
+                    dataF,
+                    row.nome,
+                    row.cpf,
+                    row.congregacao,
+                    row.modalidade,
+                    valorF,
+                    row.status
+                ];
+                tableRows.push(rowData);
+            });
+
+            // Gerar Tabela
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 35,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] }, // Slate-800
+                alternateRowStyles: { fillColor: [241, 245, 249] }
+            });
+
+            doc.save(`relatorio_ebd_2026_${Date.now()}.pdf`);
         }
 
         // --- MODAL ---
@@ -407,11 +523,10 @@
             document.getElementById('modalObs').value = row.obs || "";
             document.getElementById('modalCurrentCpf').value = row.cpf;
 
-            // Link Comprovante (MODIFICADO PARA EXIBIR A URL)
+            // Link Comprovante
             const proofDiv = document.getElementById('currentProofLink');
             
             if(row.comprovante && row.comprovante.startsWith('http')) {
-                // Injeta campo de texto com URL e botão para abrir
                 proofDiv.innerHTML = `
                     <div class="flex items-center justify-between mb-1">
                         <span class="text-xs text-slate-400 font-bold">URL do Arquivo:</span>
@@ -522,8 +637,6 @@
                 if(res.status === 'success') {
                     closeModal();
                     loadData();
-                    // Pequeno toast de sucesso (opcional, aqui uso alert simples)
-                    // alert('Sucesso!'); 
                 } else {
                     alert('Erro: ' + res.message);
                 }
